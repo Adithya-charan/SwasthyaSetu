@@ -78,7 +78,7 @@ export default function DoctorEarningsPage() {
                         <BarChart data={earningsData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                             <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 13, fontWeight: 500}} dy={15} />
-                            <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={customTooltipStyle} formatter={(value: number) => `₹${value.toLocaleString()}`} />
+                            <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={customTooltipStyle} formatter={(value: any) => `₹${Number(value).toLocaleString()}`} />
                             <Bar dataKey="amount" radius={[6, 6, 0, 0]} maxBarSize={50}>
                                 {earningsData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={entry.amount === Math.max(...earningsData.map(d=>d.amount)) ? '#0ea5e9' : '#38bdf8'} />
