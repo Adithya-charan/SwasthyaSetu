@@ -11,6 +11,7 @@ export default function LoginPage() {
     const { login } = useAuth();
     const router = useRouter();
     const [role, setRole] = useState<'patient' | 'doctor' | 'pharmacist' | 'admin'>('patient');
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -20,9 +21,9 @@ export default function LoginPage() {
         setIsLoggingIn(true);
         console.log("LOGIN PAGE: Attempting login with role:", role);
         try {
-            await login(email || `user-${Date.now()}@example.com`, role);
-            console.log("LOGIN PAGE: Login successful, redirecting to:", `/${role}`);
-            router.push(`/${role}`);
+            await login(email || `user-${Date.now()}@example.com`, role, name || undefined);
+            console.log("LOGIN PAGE: Login successful, redirecting to:", `/${role}/dashboard`);
+            router.push(`/${role}/dashboard`);
         } catch (error) {
             console.error("LOGIN PAGE: Login failed", error);
         } finally {
@@ -59,6 +60,14 @@ export default function LoginPage() {
                     </div>
 
                     <form className="space-y-4" onSubmit={handleLogin}>
+                        <Input
+                            label="Full Name"
+                            type="text"
+                            placeholder="John Doe"
+                            icon={<User className="w-4 h-4" />}
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                        />
                         <Input
                             label="Email Address"
                             type="email"

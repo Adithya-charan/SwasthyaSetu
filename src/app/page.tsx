@@ -185,16 +185,16 @@ export default function Home() {
                         <div>
                             <h4 className="font-bold text-white mb-4">Platform</h4>
                             <ul className="space-y-2">
-                                <li><Link href="/about" className="hover:text-primary-400">About Us</Link></li>
-                                <li><Link href="/doctors" className="hover:text-primary-400">Find Doctors</Link></li>
-                                <li><Link href="/pricing" className="hover:text-primary-400">Pricing</Link></li>
+                                <li><Link href="#" className="hover:text-primary-400">About Us</Link></li>
+                                <li><Link href="#" className="hover:text-primary-400">Find Doctors</Link></li>
+                                <li><Link href="#" className="hover:text-primary-400">Pricing</Link></li>
                             </ul>
                         </div>
                         <div>
                             <h4 className="font-bold text-white mb-4">Legal</h4>
                             <ul className="space-y-2">
-                                <li><Link href="/privacy" className="hover:text-primary-400">Privacy Policy</Link></li>
-                                <li><Link href="/terms" className="hover:text-primary-400">Terms of Service</Link></li>
+                                <li><Link href="#" className="hover:text-primary-400">Privacy Policy</Link></li>
+                                <li><Link href="#" className="hover:text-primary-400">Terms of Service</Link></li>
                             </ul>
                         </div>
                     </div>
@@ -203,6 +203,7 @@ export default function Home() {
                     </div>
                 </div>
             </footer>
+
         </div>
     )
 }

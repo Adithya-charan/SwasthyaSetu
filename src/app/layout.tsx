@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import { Manrope } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/context/AuthContext';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import SwasthyaBot from '@/components/shared/SwasthyaBot';
 
 const manrope = Manrope({ subsets: ['latin'] })
 
@@ -18,7 +21,11 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={manrope.className}>
-                <AuthProvider>{children}</AuthProvider>
+                <AuthProvider>
+                    {children}
+                    <SwasthyaBot />
+                    <ToastContainer position="top-right" autoClose={3000} />
+                </AuthProvider>
             </body>
         </html>
     )

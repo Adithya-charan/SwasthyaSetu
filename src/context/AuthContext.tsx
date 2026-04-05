@@ -13,7 +13,7 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
-    login: (email: string, role: string) => Promise<void>;
+    login: (email: string, role: string, name?: string) => Promise<void>;
     logout: () => void;
     isLoading: boolean;
 }
@@ -39,19 +39,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
     }, []);
 
-    const login = async (email: string, role: string) => {
+    const login = async (email: string, role: string, name?: string) => {
         setIsLoading(true);
-        console.log("LOGIN: Starting login process for", email, role);
+        console.log("LOGIN: Starting login process for", email, role, name);
 
         try {
             // Mock user creation
             const mockUser: User = {
                 id: Math.random().toString(36).substr(2, 9),
-                name: email.split('@')[0],
+                name: name || email.split('@')[0],
                 email,
                 role: role as any,
                 token: 'mock-jwt-token-123',
-                image: `https://i.pravatar.cc/150?u=${email}`
+                image: undefined
             };
 
             // Save to local storage

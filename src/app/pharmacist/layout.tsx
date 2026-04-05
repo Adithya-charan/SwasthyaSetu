@@ -1,6 +1,15 @@
-'use client';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-
-export default function Layout({ children }: { children: React.ReactNode }) {
-    return <DashboardLayout role="pharmacist">{children}</DashboardLayout>;
+export default function PharmacistLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <ProtectedRoute>
+            <RoleRoute allowedRole="pharmacist">
+                <DashboardLayout role="pharmacist">
+                    {children}
+                </DashboardLayout>
+            </RoleRoute>
+        </ProtectedRoute>
+    );
 }
+
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import RoleRoute from '@/components/auth/RoleRoute';

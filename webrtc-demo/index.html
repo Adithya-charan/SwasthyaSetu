@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swasthya Setu - Video Consultation</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="healthcare-app">
+        <header class="app-header">
+            <div class="logo-container">
+                <div class="logo-icon">+</div>
+                <div class="logo-text">Swasthya Setu</div>
+            </div>
+            <h1>Telemedicine Consultation</h1>
+            <div class="status-badge">Secure WebRTC</div>
+        </header>
+
+        <main class="consultation-container">
+            <div class="video-section">
+                <!-- Local Video -->
+                <div class="video-card doctor-card">
+                    <div class="video-header">
+                        <h2 class="video-label">Doctor Video (Local)</h2>
+                        <span class="status-indicator offline" id="localStatus">Offline</span>
+                    </div>
+                    <div class="video-wrapper">
+                        <video id="localVideo" class="video-player" autoplay playsinline muted></video>
+                        <div class="video-placeholder" id="localPlaceholder">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                            <p>Camera Off</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Remote Video -->
+                <div class="video-card patient-card">
+                    <div class="video-header">
+                        <h2 class="video-label">Patient Video (Remote)</h2>
+                        <span class="status-indicator offline" id="remoteStatus">Waiting...</span>
+                    </div>
+                    <div class="video-wrapper">
+                        <video id="remoteVideo" class="video-player" autoplay playsinline></video>
+                        <div class="video-placeholder" id="remotePlaceholder">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                            <p>Not Connected</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="panel connection-panel">
+                    <h3>Connection Setup (Manual Signaling)</h3>
+                    <p class="instruction-text">Follow the steps below to establish a peer-to-peer connection.</p>
+                    
+                    <div class="step-card">
+                        <div class="step-header">
+                            <span class="step-number">1</span>
+                            <h4>Initialize Media</h4>
+                        </div>
+                        <button id="startCameraBtn" class="btn primary-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                            Start Camera & Microphone
+                        </button>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-header">
+                            <span class="step-number">2</span>
+                            <h4>Doctor Creates Offer</h4>
+                        </div>
+                        <p class="sub-text">Doctor: Click to generate an offer, copy the code below, and send to the patient.</p>
+                        <button id="createOfferBtn" class="btn secondary-btn" disabled>Create Offer</button>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-header">
+                            <span class="step-number">3</span>
+                            <h4>Patient Creates Answer</h4>
+                        </div>
+                        <p class="sub-text">Patient: Paste the offer below, then click here to generate an answer. Send it back to the doctor.</p>
+                        <button id="createAnswerBtn" class="btn secondary-btn" disabled>Create Answer</button>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-header">
+                            <span class="step-number">4</span>
+                            <h4>Doctor Connects</h4>
+                        </div>
+                        <p class="sub-text">Doctor: Paste the patient's answer below and click connect.</p>
+                        <button id="addAnswerBtn" class="btn success-btn" disabled>Connect Both Users</button>
+                    </div>
+                </div>
+
+                <div class="panel signaling-panel">
+                    <div class="textarea-header">
+                        <h3>Session Data (SDP & ICE)</h3>
+                        <button id="copyBtn" class="btn icon-btn" title="Copy to clipboard">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            Copy Data
+                        </button>
+                    </div>
+                    <textarea id="offerData" class="data-textarea" placeholder="Paste Offer or Answer data here..."></textarea>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

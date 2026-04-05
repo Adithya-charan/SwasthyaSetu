@@ -1,0 +1,33 @@
+export const MOCK_ACTIVITY_LOGS = [
+    { id: 1, name: 'Priya Sharma', role: 'Patient', loginTime: '09:14 AM', logoutTime: '10:02 AM', duration: '48m', device: 'Chrome on Windows', status: 'Completed' },
+    { id: 2, name: 'Dr. Rajesh Kumar', role: 'Doctor', loginTime: '08:30 AM', logoutTime: '—', duration: '3h 12m', device: 'Firefox on Mac', status: 'Active' },
+    { id: 3, name: 'Meena Pharmacist', role: 'Pharmacist', loginTime: '10:00 AM', logoutTime: '11:30 AM', duration: '1h 30m', device: 'Chrome on Android', status: 'Completed' },
+    { id: 4, name: 'Rahul Desai', role: 'Patient', loginTime: '11:05 AM', logoutTime: '—', duration: '45m', device: 'Safari on iPhone', status: 'Active' },
+    { id: 5, name: 'Dr. Sarah Smith', role: 'Doctor', loginTime: '07:45 AM', logoutTime: '09:15 AM', duration: '1h 30m', device: 'Chrome on Mac', status: 'Completed' },
+    { id: 6, name: 'Kavita Patel', role: 'Patient', loginTime: '09:30 AM', logoutTime: '09:45 AM', duration: '15m', device: 'Edge on Windows', status: 'Force Logged Out' },
+    { id: 7, name: 'Arun Singh', role: 'Pharmacist', loginTime: '08:00 AM', logoutTime: '—', duration: '3h 50m', device: 'Chrome on Windows', status: 'Active' },
+    { id: 8, name: 'Dr. John Doe', role: 'Doctor', loginTime: '06:30 AM', logoutTime: '10:30 AM', duration: '4h 0m', device: 'Safari on Mac', status: 'Completed' },
+    { id: 9, name: 'Aisha Khan', role: 'Patient', loginTime: '10:15 AM', logoutTime: '11:00 AM', duration: '45m', device: 'Firefox on Windows', status: 'Completed' },
+    { id: 10, name: 'Vikram Mehta', role: 'Patient', loginTime: '11:20 AM', logoutTime: '—', duration: '30m', device: 'Chrome on Android', status: 'Active' },
+    { id: 11, name: 'Dr. Emily Chen', role: 'Doctor', loginTime: '09:00 AM', logoutTime: '12:00 PM', duration: '3h 0m', device: 'Edge on Mac', status: 'Completed' },
+    { id: 12, name: 'Sanjay Gupta', role: 'Pharmacist', loginTime: '08:15 AM', logoutTime: '09:45 AM', duration: '1h 30m', device: 'Safari on iPad', status: 'Completed' },
+    { id: 13, name: 'Neha Reddy', role: 'Patient', loginTime: '08:45 AM', logoutTime: '09:00 AM', duration: '15m', device: 'Chrome on Windows', status: 'Completed' },
+    { id: 14, name: 'Rohan Joshi', role: 'Patient', loginTime: '10:45 AM', logoutTime: '—', duration: '1h 5m', device: 'Firefox on Mac', status: 'Active' },
+    { id: 15, name: 'Dr. Prakash Rao', role: 'Doctor', loginTime: '11:30 AM', logoutTime: '—', duration: '20m', device: 'Chrome on Windows', status: 'Active' },
+    { id: 16, name: 'Deepa Nair', role: 'Pharmacist', loginTime: '09:45 AM', logoutTime: '10:15 AM', duration: '30m', device: 'Safari on Mac', status: 'Completed' },
+    { id: 17, name: 'Anil Verma', role: 'Patient', loginTime: '07:30 AM', logoutTime: '08:00 AM', duration: '30m', device: 'Chrome on Android', status: 'Force Logged Out' },
+    { id: 18, name: 'Sunita Das', role: 'Patient', loginTime: '11:10 AM', logoutTime: '—', duration: '40m', device: 'Edge on Windows', status: 'Active' },
+    { id: 19, name: 'Dr. Anil Kapoor', role: 'Doctor', loginTime: '08:20 AM', logoutTime: '11:20 AM', duration: '3h 0m', device: 'Chrome on Mac', status: 'Completed' },
+    { id: 20, name: 'Pooja Iyer', role: 'Pharmacist', loginTime: '10:30 AM', logoutTime: '—', duration: '1h 20m', device: 'Firefox on Windows', status: 'Active' },
+];
+
+export const MOCK_ONLINE_USERS = [
+    { id: 'u1', name: 'Dr. Rajesh Kumar', role: 'Doctor', status: 'Online', loginTime: '08:30 AM', activity: 'Viewing dashboard', duration: '3h 12m', avatar: 'RK' },
+    { id: 'u2', name: 'Rahul Desai', role: 'Patient', status: 'In Consultation', loginTime: '11:05 AM', activity: 'In consultation with Dr. Smith', duration: '45m', avatar: 'RD' },
+    { id: 'u3', name: 'Arun Singh', role: 'Pharmacist', status: 'Idle', loginTime: '08:00 AM', activity: 'Processing prescription #42', duration: '3h 50m', avatar: 'AS' },
+    { id: 'u4', name: 'Vikram Mehta', role: 'Patient', status: 'Online', loginTime: '11:20 AM', activity: 'Booking appointment', duration: '30m', avatar: 'VM' },
+    { id: 'u5', name: 'Rohan Joshi', role: 'Patient', status: 'Online', loginTime: '10:45 AM', activity: 'Viewing history', duration: '1h 5m', avatar: 'RJ' },
+    { id: 'u6', name: 'Dr. Prakash Rao', role: 'Doctor', status: 'In Consultation', loginTime: '11:30 AM', activity: 'In consultation with Sunita Dash', duration: '20m', avatar: 'PR' },
+    { id: 'u7', name: 'Sunita Das', role: 'Patient', status: 'In Consultation', loginTime: '11:10 AM', activity: 'In consultation with Dr. Rao', duration: '40m', avatar: 'SD' },
+    { id: 'u8', name: 'Pooja Iyer', role: 'Pharmacist', status: 'Online', loginTime: '10:30 AM', activity: 'Viewing queue', duration: '1h 20m', avatar: 'PI' },
+];
