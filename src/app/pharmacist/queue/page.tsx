@@ -5,14 +5,16 @@ import StatusBadge from '@/components/shared/StatusBadge';
 import { Check, Eye } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-const MOCK_QUEUE = [
-    { id: 'PR-1001', patient: 'Alice Walker', doctor: 'Dr. Sarah Smith', date: 'Oct 24, 2024', medsCount: 3, status: 'ISSUED' as const },
-    { id: 'PR-1002', patient: 'Bob Smith', doctor: 'Dr. John Doe', date: 'Oct 24, 2024', medsCount: 1, status: 'ISSUED' as const },
-    { id: 'PR-1003', patient: 'Emily Chen', doctor: 'Dr. Sarah Smith', date: 'Oct 23, 2024', medsCount: 2, status: 'ISSUED' as const },
+type QueueItem = { id: string; patient: string; doctor: string; date: string; medsCount: number; status: 'ISSUED' | 'DISPENSED' };
+
+const MOCK_QUEUE: QueueItem[] = [
+    { id: 'PR-1001', patient: 'Alice Walker', doctor: 'Dr. Sarah Smith', date: 'Oct 24, 2024', medsCount: 3, status: 'ISSUED' },
+    { id: 'PR-1002', patient: 'Bob Smith', doctor: 'Dr. John Doe', date: 'Oct 24, 2024', medsCount: 1, status: 'ISSUED' },
+    { id: 'PR-1003', patient: 'Emily Chen', doctor: 'Dr. Sarah Smith', date: 'Oct 23, 2024', medsCount: 2, status: 'ISSUED' },
 ];
 
 export default function PharmacistQueue() {
-    const [queue, setQueue] = useState(MOCK_QUEUE);
+    const [queue, setQueue] = useState<QueueItem[]>(MOCK_QUEUE);
 
     const handleDispense = (id: string, e: React.MouseEvent) => {
         e.preventDefault();
