@@ -41,7 +41,7 @@ function OnboardingContent() {
         // Here you would save the profile to the backend
 
         // Then log the user in (simulated)
-        await login(formData.email || `user-${Date.now()}@example.com`, role);
+        await login(formData.email || `user-${Date.now()}@example.com`, 'password123', role, formData.fullName);
 
         // The login function in AuthContext will trigger the socket event
         // Then we redirect to the dashboard
