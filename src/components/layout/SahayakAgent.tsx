@@ -92,7 +92,8 @@ export default function SahayakAgent({ roomName = 'landing-page-room' }: Sahayak
         try {
             setIsOpen(true);
             console.log("Creating Tavus Video Conversation...");
-            const resp = await fetch('http://127.0.0.1:5001/create-tavus-conversation', { 
+            const tokenServer = process.env.NEXT_PUBLIC_TOKEN_SERVER_URL || `http://${window.location.hostname}:5001`;
+            const resp = await fetch(`${tokenServer}/create-tavus-conversation`, { 
                 method: 'POST' 
             });
             const data = await resp.json();
@@ -115,7 +116,8 @@ export default function SahayakAgent({ roomName = 'landing-page-room' }: Sahayak
     const fetchToken = useCallback(async () => {
         try {
             const participantName = `User_${Math.floor(Math.random() * 1000)}`;
-            const resp = await fetch(`http://127.0.0.1:5001/get-token?roomName=${roomName}&participantName=${participantName}`);
+            const tokenServer = process.env.NEXT_PUBLIC_TOKEN_SERVER_URL || `http://${window.location.hostname}:5001`;
+            const resp = await fetch(`${tokenServer}/get-token?roomName=${roomName}&participantName=${participantName}`);
             const data = await resp.json();
             setToken(data.token);
             setIsOpen(true);
