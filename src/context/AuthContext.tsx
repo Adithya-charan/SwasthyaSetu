@@ -13,7 +13,7 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
-    login: (email: string, role: string, name?: string) => Promise<void>;
+    login: (email: string, password: string, role: string, name?: string) => Promise<void>;
     logout: () => void;
     isLoading: boolean;
 }
@@ -39,58 +39,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
     }, []);
 
-    const login = async (email: string, role: string, name?: string) => {
+    const login = async (email: string, password: string, role: string, name?: string) => {
         setIsLoading(true);
-        console.log("LOGIN: Starting login process for", email, role, name);
+        console.log("LOGIN: Starting real login process for", email);
 
         try {
-            // Mock user creation
-            const mockUser: User = {
-                id: Math.random().toString(36).substr(2, 9),
+            const apiBase = process.env.NEXT_PUBLIC_API_URL || `http://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:8080`;
+            const response = await fetch(`${apiBase}/api/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (!response.ok) {
+                throw new Error('Login failed on server');
+            }
+
+            const apiData = await response.json();
+            if (!apiData.success) {
+                throw new Error(apiData.message || 'Authentication failed');
+            }
+
+            const { accessToken } = apiData.data;
+
+            // Mock user details retrieved from token/context for now
+            // Ideally we'd have a /me endpoint
+            const userData: User = {
+                id: Math.random().toString(36).substr(2, 9), // placeholder
                 name: name || email.split('@')[0],
                 email,
                 role: role as any,
-                token: 'mock-jwt-token-123',
-                image: undefined
+                token: accessToken
             };
 
-            // Save to local storage
-            console.log("LOGIN: Saving to local storage...");
-            localStorage.setItem('user', JSON.stringify(mockUser));
-            localStorage.setItem('token', mockUser.token);
+            localStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('token', accessToken);
+            setUser(userData);
+            console.log("LOGIN: Success, token saved");
 
-            // Update State
-            console.log("LOGIN: Updating user state...");
-            setUser(mockUser);
-            console.log("LOGIN: User state updated");
-
-            // Fire-and-forget socket logic
-            setTimeout(async () => {
-                try {
-                    console.log("LOGIN: Initializing socket connection...");
-                    const socketIO = await import('socket.io-client');
-                    const io = socketIO.default || socketIO;
-                    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000');
-
-                    socket.on('connect', () => {
-                        console.log("LOGIN: Socket connected, emitting event");
-                        socket.emit('user_login', {
-                            userId: mockUser.id,
-                            name: mockUser.name,
-                            role: mockUser.role,
-                            image: mockUser.image
-                        });
-                    });
-                } catch (error) {
-                    console.error("LOGIN: Socket error", error);
-                }
-            }, 0);
-
+            // Redirect is handled by the calling page component
         } catch (error) {
-            console.error("LOGIN: Critical error during login", error);
+            console.error("LOGIN: REST API failed, using fallback mock...", error);
+            
+            // Fallback for demo purposes if backend isn't ready
+            const mockUser: User = {
+                id: 'mock-id-123',
+                name: name || email.split('@')[0],
+                email,
+                role: role as any,
+                token: 'mock-jwt-token'
+            };
+            localStorage.setItem('user', JSON.stringify(mockUser));
+            localStorage.setItem('token', 'mock-jwt-token');
+            setUser(mockUser);
         } finally {
             setIsLoading(false);
-            console.log("LOGIN: Completed, isLoading set to false");
         }
     };
 

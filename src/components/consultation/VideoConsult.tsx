@@ -3,6 +3,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Video, Check, Loader2, Languages } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { translationService } from '@/services/voiceTranslationService';
+import SockJS from 'sockjs-client';
+import { Client } from '@stomp/stompjs';
 
 interface VideoConsultProps {
     roomName: string;
@@ -19,7 +21,7 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-    const channelRef = useRef<BroadcastChannel | null>(null);
+    const channelRef = useRef<Client | null>(null);
     const iceCandidateQueueRef = useRef<any[]>([]);
     const hasSentOffer = useRef(false);
     
@@ -60,79 +62,90 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
     };
 
     useEffect(() => {
-        const bc = new BroadcastChannel(`webrtc_${roomName}`);
-        channelRef.current = bc;
+        const socket = new SockJS(`http://${window.location.hostname}:8080/ws/webrtc`);
+        const stompClient = new Client({
+            webSocketFactory: () => socket,
+            onConnect: () => {
+                console.log('Connected to WebRTC signaling server via STOMP');
+                stompClient.subscribe(`/topic/signal/${roomName}`, async (message) => {
+                    const data = JSON.parse(message.body);
+                    const { type, role, payload, original, translated, senderName } = data;
+                    const pc = peerConnectionRef.current;
 
-        bc.onmessage = async (event) => {
-            const { type, role, payload, original, translated, senderName } = event.data;
-            const pc = peerConnectionRef.current;
-
-            if (type === 'ready') {
-                if (!pc) return;
-                if (userRole === 'doctor' && role === 'patient') {
-                    if (hasSentOffer.current) return;
-                    hasSentOffer.current = true;
-                    try {
-                        const offer = await pc.createOffer();
-                        await pc.setLocalDescription(offer);
-                        bc.postMessage({ type: 'offer', payload: offer });
-                    } catch (e) { }
-                } else if (userRole === 'patient' && role === 'doctor') {
-                    bc.postMessage({ type: 'ready', role: 'patient' });
-                }
-                return;
-            }
-
-            if (type === 'translation') {
-                // Incoming Voice Translation over WebRTC Signal!
-                setCurrentSubtitle(translated);
-                if (onTranscript) onTranscript(senderName, original, translated);
-                
-                // Mute remote video natively so we only hear the translated output!
-                if (remoteVideoRef.current && translationModeRef.current) {
-                    remoteVideoRef.current.muted = true; 
-                    
-                    // Mock Coqui TTS audio playback securely in-browser receiver
-                    if ('speechSynthesis' in window) {
-                        const utterance = new SpeechSynthesisUtterance(translated);
-                        utterance.lang = getTTSLangCode(myLanguageRef.current);
-                        utterance.rate = 1.0;
-                        window.speechSynthesis.speak(utterance);
+                    if (type === 'ready') {
+                        if (!pc) return;
+                        if (userRole === 'doctor' && role === 'patient') {
+                            if (hasSentOffer.current) return;
+                            hasSentOffer.current = true;
+                            try {
+                                const offer = await pc.createOffer();
+                                await pc.setLocalDescription(offer);
+                                channelRef.current?.publish({ destination: `/app/signal/${roomName}`, body: JSON.stringify({ type: 'offer', payload: offer }) });
+                            } catch (e) { }
+                        } else if (userRole === 'patient' && role === 'doctor') {
+                            channelRef.current?.publish({ destination: `/app/signal/${roomName}`, body: JSON.stringify({ type: 'ready', role: 'patient' }) });
+                        }
+                        return;
                     }
-                }
-                
-                // Auto-clear subtitle
-                setTimeout(() => setCurrentSubtitle(''), 5000);
-            }
 
-            if (!pc) return;
-
-            if (type === 'offer' && userRole === 'patient') {
-                try {
-                    await pc.setRemoteDescription(new RTCSessionDescription(payload));
-                    await processIceQueue(pc);
-                    const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
-                    bc.postMessage({ type: 'answer', payload: answer });
-                } catch (e) {}
-            } else if (type === 'answer' && userRole === 'doctor') {
-                try {
-                    if (!pc.currentRemoteDescription) {
-                         await pc.setRemoteDescription(new RTCSessionDescription(payload));
-                         await processIceQueue(pc);
+                    if (type === 'translation') {
+                        // Incoming Voice Translation over WebRTC Signal!
+                        setCurrentSubtitle(translated);
+                        if (onTranscript) onTranscript(senderName, original, translated);
+                        
+                        // Mute remote video natively so we only hear the translated output!
+                        if (remoteVideoRef.current && translationModeRef.current) {
+                            remoteVideoRef.current.muted = true; 
+                            
+                            // Mock Coqui TTS audio playback securely in-browser receiver
+                            if ('speechSynthesis' in window) {
+                                const utterance = new SpeechSynthesisUtterance(translated);
+                                utterance.lang = getTTSLangCode(myLanguageRef.current);
+                                utterance.rate = 1.0;
+                                window.speechSynthesis.speak(utterance);
+                            }
+                        }
+                        
+                        // Auto-clear subtitle
+                        setTimeout(() => setCurrentSubtitle(''), 5000);
                     }
-                } catch (e) {}
-            } else if (type === 'ice-candidate') {
-                try {
-                    if (pc.remoteDescription) await pc.addIceCandidate(new RTCIceCandidate(payload));
-                    else iceCandidateQueueRef.current.push(payload);
-                } catch (e) {}
+
+                    if (!pc) return;
+
+                    if (type === 'offer' && userRole === 'patient') {
+                        try {
+                            await pc.setRemoteDescription(new RTCSessionDescription(payload));
+                            await processIceQueue(pc);
+                            const answer = await pc.createAnswer();
+                            await pc.setLocalDescription(answer);
+                            channelRef.current?.publish({ destination: `/app/signal/${roomName}`, body: JSON.stringify({ type: 'answer', payload: answer }) });
+                        } catch (e) {}
+                    } else if (type === 'answer' && userRole === 'doctor') {
+                        try {
+                            if (!pc.currentRemoteDescription) {
+                                 await pc.setRemoteDescription(new RTCSessionDescription(payload));
+                                 await processIceQueue(pc);
+                            }
+                        } catch (e) {}
+                    } else if (type === 'ice-candidate') {
+                        try {
+                            if (pc.remoteDescription) await pc.addIceCandidate(new RTCIceCandidate(payload));
+                            else iceCandidateQueueRef.current.push(payload);
+                        } catch (e) {}
+                    }
+                });
+            },
+            onStompError: (frame) => {
+                console.error('Broker reported error: ' + frame.headers['message']);
             }
-        };
+        });
+
+        channelRef.current = stompClient;
+        stompClient.activate();
 
         return () => {
             if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
-            bc.close();
+            if (channelRef.current) channelRef.current.deactivate();
             if (peerConnectionRef.current) peerConnectionRef.current.close();
             if (localVideoRef.current?.srcObject) {
                 (localVideoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
@@ -157,7 +170,7 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
                 // FIXED: Use direct PeerConnection state to avoid stale React closures
                 const isPeerConnected = peerConnectionRef.current?.connectionState === 'connected';
                 
-                if (e.data.size > 0 && channelRef.current) {
+                if (e.data.size > 0 && channelRef.current && channelRef.current.connected) {
                     // Send chunk to python backend offline AI service wrapper
                     const response = await translationService.processAudioChunk(e.data, myLanguageRef.current, peerLanguage);
                     
@@ -167,12 +180,12 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
                         
                         // Only broadcast translations over WebRTC if a peer is legitimately connected
                         if (isPeerConnected) {
-                            channelRef.current.postMessage({ 
+                            channelRef.current.publish({ destination: `/app/signal/${roomName}`, body: JSON.stringify({ 
                                 type: 'translation', 
                                 original: response.originalText,
                                 translated: response.translatedText,
                                 senderName: userName
-                            });
+                            }) });
                         }
                     }
                 }
@@ -193,13 +206,13 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
                         
         if (response.translatedText !== '') {
             if (onTranscript) onTranscript(userName, response.originalText, '');
-            if (isPeerConnected && channelRef.current) {
-                 channelRef.current.postMessage({ 
+            if (isPeerConnected && channelRef.current && channelRef.current.connected) {
+                 channelRef.current.publish({ destination: `/app/signal/${roomName}`, body: JSON.stringify({ 
                      type: 'translation', 
                      original: response.originalText,
                      translated: response.translatedText,
                      senderName: userName
-                 });
+                 }) });
             }
         }
     };
@@ -231,7 +244,7 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
             };
 
             pc.onicecandidate = (event) => {
-                if (event.candidate && channelRef.current) channelRef.current.postMessage({ type: 'ice-candidate', payload: event.candidate.toJSON() });
+                if (event.candidate && channelRef.current && channelRef.current.connected) channelRef.current.publish({ destination: `/app/signal/${roomName}`, body: JSON.stringify({ type: 'ice-candidate', payload: event.candidate.toJSON() }) });
             };
 
             pc.onconnectionstatechange = () => {
@@ -244,7 +257,7 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
             };
 
             setConnectionState('connecting');
-            if (channelRef.current) channelRef.current.postMessage({ type: 'ready', role: userRole });
+            if (channelRef.current && channelRef.current.connected) channelRef.current.publish({ destination: `/app/signal/${roomName}`, body: JSON.stringify({ type: 'ready', role: userRole }) });
 
         } catch (error) {
             toast.error("Please allow camera/microphone permissions.");

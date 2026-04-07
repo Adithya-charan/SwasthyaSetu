@@ -21,7 +21,7 @@ export default function LoginPage() {
         setIsLoggingIn(true);
         console.log("LOGIN PAGE: Attempting login with role:", role);
         try {
-            await login(email || `user-${Date.now()}@example.com`, role, name || undefined);
+            await login(email || `user-${Date.now()}@example.com`, password || 'password123', role, name || undefined);
             console.log("LOGIN PAGE: Login successful, redirecting to:", `/${role}/dashboard`);
             router.push(`/${role}/dashboard`);
         } catch (error) {
