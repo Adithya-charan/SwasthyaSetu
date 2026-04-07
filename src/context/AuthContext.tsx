@@ -44,7 +44,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("LOGIN: Starting real login process for", email);
 
         try {
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || `http://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:8080`;
+            const isBrowser = typeof window !== 'undefined';
+            const defaultHost = isBrowser ? window.location.hostname : 'localhost';
+            const defaultProtocol = isBrowser ? window.location.protocol : 'http:';
+            const apiBase = process.env.NEXT_PUBLIC_API_URL || `${defaultProtocol}//${defaultHost}:8080`;
             const response = await fetch(`${apiBase}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

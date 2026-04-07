@@ -62,7 +62,8 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
     };
 
     useEffect(() => {
-        const socket = new SockJS(`http://${window.location.hostname}:8080/ws/webrtc`);
+        const wsBase = process.env.NEXT_PUBLIC_WS_URL || `${window.location.protocol}//${window.location.hostname}:8080`;
+        const socket = new SockJS(`${wsBase}/ws/webrtc`);
         const stompClient = new Client({
             webSocketFactory: () => socket,
             onConnect: () => {
