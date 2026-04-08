@@ -27,12 +27,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
 
     useEffect(() => {
-        // Simple check on mount
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             try {
                 setUser(JSON.parse(storedUser));
-                console.log("AUTH: Found user in storage", JSON.parse(storedUser).name);
             } catch (e) {
                 console.error("Error parsing user", e);
             }
@@ -42,49 +40,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (email: string, password: string, role: string, name?: string) => {
         setIsLoading(true);
-        console.log("LOGIN: Starting real login process for", email);
+        console.log("LOGIN: Authenticating", email);
 
         try {
             const apiData = await fetchApi('/api/auth/login', {
                 method: 'POST',
                 body: JSON.stringify({ email, password })
             });
+
             if (!apiData.success) {
                 throw new Error(apiData.message || 'Authentication failed');
             }
 
-            const { accessToken } = apiData.data;
+            const { accessToken, userId, fullName, email: userEmail, role: userRole } = apiData.data;
 
-            // Mock user details retrieved from token/context for now
-            // Ideally we'd have a /me endpoint
             const userData: User = {
-                id: Math.random().toString(36).substr(2, 9), // placeholder
-                name: name || email.split('@')[0],
-                email,
-                role: role as any,
+                id: userId,
+                name: fullName || name || email.split('@')[0],
+                email: userEmail || email,
+                role: (userRole || role).toLowerCase() as any,
                 token: accessToken
             };
 
             localStorage.setItem('user', JSON.stringify(userData));
             localStorage.setItem('token', accessToken);
             setUser(userData);
-            console.log("LOGIN: Success, token saved");
+            console.log("LOGIN: Success — real JWT stored for user", userData.id);
 
-            // Redirect is handled by the calling page component
         } catch (error) {
-            console.error("LOGIN: REST API failed, using fallback mock...", error);
+            console.error("LOGIN: Backend unreachable, trying registration...", error);
             
-            // Fallback for demo purposes if backend isn't ready
-            const mockUser: User = {
-                id: 'mock-id-123',
-                name: name || email.split('@')[0],
-                email,
-                role: role as any,
-                token: 'mock-jwt-token'
-            };
-            localStorage.setItem('user', JSON.stringify(mockUser));
-            localStorage.setItem('token', 'mock-jwt-token');
-            setUser(mockUser);
+            // If login fails, try to register the user first, then login again
+            try {
+                await fetchApi('/api/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        fullName: name || email.split('@')[0],
+                        email,
+                        password,
+                        role: role.toUpperCase(),
+                        phone: ''
+                    })
+                });
+                console.log("LOGIN: Auto-registered, retrying login...");
+                
+                const retryData = await fetchApi('/api/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+
+                const { accessToken, userId, fullName, email: userEmail, role: userRole } = retryData.data;
+                const userData: User = {
+                    id: userId,
+                    name: fullName || name || email.split('@')[0],
+                    email: userEmail || email,
+                    role: (userRole || role).toLowerCase() as any,
+                    token: accessToken
+                };
+                localStorage.setItem('user', JSON.stringify(userData));
+                localStorage.setItem('token', accessToken);
+                setUser(userData);
+                console.log("LOGIN: Auto-register + login succeeded for", userData.id);
+                
+            } catch (regError) {
+                console.error("LOGIN: Both login and register failed. Backend offline?", regError);
+                throw new Error("Unable to connect to the server. Please ensure the backend is running.");
+            }
         } finally {
             setIsLoading(false);
         }

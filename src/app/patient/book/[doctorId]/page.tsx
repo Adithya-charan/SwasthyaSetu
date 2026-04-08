@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { Calendar as CalendarIcon, Clock, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { fetchApi } from '@/lib/api';
 
 export default function BookAppointment({ params }: { params: { doctorId: string } }) {
     const router = useRouter();
@@ -14,7 +15,15 @@ export default function BookAppointment({ params }: { params: { doctorId: string
 
     const timeSlots = ['09:00 AM', '09:30 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:30 PM', '05:00 PM'];
 
-    const handleBook = (e: React.FormEvent) => {
+    const convertTo24Hr = (time12h: string): string => {
+        const [time, modifier] = time12h.split(' ');
+        let [hours, minutes] = time.split(':').map(Number);
+        if (modifier === 'PM' && hours !== 12) hours += 12;
+        if (modifier === 'AM' && hours === 12) hours = 0;
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+    };
+
+    const handleBook = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!date || !time) {
             toast.error('Please select both date and time');
@@ -22,10 +31,26 @@ export default function BookAppointment({ params }: { params: { doctorId: string
         }
 
         setIsSubmitting(true);
-        setTimeout(() => {
+        try {
+            const scheduledAt = `${date}T${convertTo24Hr(time)}`;
+            
+            await fetchApi('/api/appointments', {
+                method: 'POST',
+                body: JSON.stringify({
+                    doctorId: params.doctorId,
+                    scheduledAt,
+                    reason: reason || 'General consultation'
+                })
+            });
+
             toast.success('Appointment booked successfully!');
             router.push('/patient/appointments');
-        }, 1500);
+        } catch (error: any) {
+            console.error('Booking failed:', error);
+            toast.error(error.message || 'Failed to book appointment. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -38,7 +63,6 @@ export default function BookAppointment({ params }: { params: { doctorId: string
             </div>
 
             <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-6">
-                {/* Mock Doctor Info */}
                 <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
                     <img src="https://i.pravatar.cc/150?img=1" className="w-16 h-16 rounded-full" alt="Doctor" />
                     <div>

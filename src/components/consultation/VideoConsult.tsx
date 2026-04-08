@@ -33,13 +33,23 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
     
     const [myLanguageState, setMyLanguageState] = useState(userRole === 'doctor' ? 'English' : 'Hindi');
     const myLanguageRef = useRef(myLanguageState);
-    const peerLanguage = userRole === 'doctor' ? 'Hindi' : 'English';
-    const translationModeRef = useRef(myLanguageState !== peerLanguage);
+    
+    // ALLOW DYNAMIC PEER LANGUAGE SELECTION AS REQUESTED
+    const [peerLanguageState, setPeerLanguageState] = useState(userRole === 'doctor' ? 'Hindi' : 'English');
+    const peerLanguageRef = useRef(peerLanguageState);
+    
+    const translationModeRef = useRef(myLanguageState !== peerLanguageState);
     
     const setMyLanguage = (lang: string) => {
         setMyLanguageState(lang);
         myLanguageRef.current = lang;
-        translationModeRef.current = lang !== peerLanguage;
+        translationModeRef.current = lang !== peerLanguageRef.current;
+    };
+
+    const setPeerLanguage = (lang: string) => {
+        setPeerLanguageState(lang);
+        peerLanguageRef.current = lang;
+        translationModeRef.current = lang !== myLanguageRef.current;
     };
 
     const [currentSubtitle, setCurrentSubtitle] = useState('');
@@ -65,93 +75,122 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
         const isBrowser = typeof window !== 'undefined';
         const isVercel = isBrowser && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('swasthyasetu'));
         
-        // Priority: Env Var > Vercel Detection > Localhost Fallback
         let wsBase = process.env.NEXT_PUBLIC_WS_URL;
         if (!wsBase) {
             if (isVercel) {
-                // For Vercel, use the same host but ensure it doesn't default to :8080 unless explicitly told
                 wsBase = `${window.location.protocol}//${window.location.hostname}`;
             } else {
                 wsBase = `${window.location.protocol}//${window.location.hostname}:8080`;
             }
         }
         
-        console.log("WEBRTC: Connecting to signaling at:", wsBase);
+        console.log("WEBRTC: Initializing signaling at:", wsBase);
         const socket = new SockJS(`${wsBase}/ws/webrtc`);
         const stompClient = new Client({
             webSocketFactory: () => socket,
+            debug: (str) => {
+                if ((window as any).videoDebug) console.log("STOMP DEBUG:", str);
+            },
             onConnect: () => {
-                console.log('Connected to WebRTC signaling server via STOMP');
+                console.log('WEBRTC: Connected to signaling server');
                 stompClient.subscribe(`/topic/signal/${roomName}`, async (message) => {
-                    const data = JSON.parse(message.body);
-                    const { type, role, payload, original, translated, senderName } = data;
-                    const pc = peerConnectionRef.current;
+                    try {
+                        const data = JSON.parse(message.body);
+                        const { type, role, payload, original, translated, senderName } = data;
+                        
+                        console.log(`WEBRTC: Received signal [${type}] from [${role}]`);
+                        
+                        // Handle peer connectivity first
+                        if (type === 'ready') {
+                            if (userRole === 'doctor' && role === 'patient') {
+                                console.log("WEBRTC: Patient is ready, doctor initiating offer...");
+                                const pc = peerConnectionRef.current;
+                                if (!pc || hasSentOffer.current) return;
+                                
+                                hasSentOffer.current = true;
+                                try {
+                                    const offer = await pc.createOffer();
+                                    await pc.setLocalDescription(offer);
+                                    stompClient.publish({ 
+                                        destination: `/app/signal/${roomName}`, 
+                                        body: JSON.stringify({ type: 'offer', role: userRole, payload: offer }) 
+                                    });
+                                } catch (e) {
+                                    console.error("WEBRTC: Offer creation failed", e);
+                                }
+                            } else if (userRole === 'patient' && role === 'doctor') {
+                                console.log("WEBRTC: Doctor is ready, acknowledging as patient...");
+                                stompClient.publish({ 
+                                    destination: `/app/signal/${roomName}`, 
+                                    body: JSON.stringify({ type: 'ready', role: 'patient' }) 
+                                });
+                            }
+                            return;
+                        }
 
-                    if (type === 'ready') {
-                        if (!pc) return;
-                        if (userRole === 'doctor' && role === 'patient') {
-                            if (hasSentOffer.current) return;
-                            hasSentOffer.current = true;
+                        if (type === 'translation') {
+                            // ONLY act if the translation came from the OTHER person
+                            if (senderName !== userName) {
+                                setCurrentSubtitle(translated);
+                                if (onTranscript) onTranscript(senderName, original, translated);
+                                
+                                // VOICE CHANGING / TTS DISABLED AS REQUESTED
+                                // Only text-based translations will be displayed now
+                                
+                                setTimeout(() => setCurrentSubtitle(''), 5000);
+                            }
+                            return;
+                        }
+
+                        const pc = peerConnectionRef.current;
+                        if (!pc) {
+                            console.warn(`WEBRTC: Received ${type} signal but PeerConnection not initialized yet. Skipping.`);
+                            return;
+                        }
+
+                        if (type === 'offer' && userRole === 'patient') {
+                            console.log("WEBRTC: Received offer, creating answer...");
                             try {
-                                const offer = await pc.createOffer();
-                                await pc.setLocalDescription(offer);
-                                channelRef.current?.publish({ destination: `/app/signal/${roomName}`, body: JSON.stringify({ type: 'offer', payload: offer }) });
-                            } catch (e) { }
-                        } else if (userRole === 'patient' && role === 'doctor') {
-                            channelRef.current?.publish({ destination: `/app/signal/${roomName}`, body: JSON.stringify({ type: 'ready', role: 'patient' }) });
-                        }
-                        return;
-                    }
-
-                    if (type === 'translation') {
-                        // Incoming Voice Translation over WebRTC Signal!
-                        setCurrentSubtitle(translated);
-                        if (onTranscript) onTranscript(senderName, original, translated);
-                        
-                        // Mute remote video natively so we only hear the translated output!
-                        if (remoteVideoRef.current && translationModeRef.current) {
-                            remoteVideoRef.current.muted = true; 
-                            
-                            // Mock Coqui TTS audio playback securely in-browser receiver
-                            if ('speechSynthesis' in window) {
-                                const utterance = new SpeechSynthesisUtterance(translated);
-                                utterance.lang = getTTSLangCode(myLanguageRef.current);
-                                utterance.rate = 1.0;
-                                window.speechSynthesis.speak(utterance);
+                                await pc.setRemoteDescription(new RTCSessionDescription(payload));
+                                await processIceQueue(pc);
+                                const answer = await pc.createAnswer();
+                                await pc.setLocalDescription(answer);
+                                stompClient.publish({ 
+                                    destination: `/app/signal/${roomName}`, 
+                                    body: JSON.stringify({ type: 'answer', role: userRole, payload: answer }) 
+                                });
+                            } catch (e) {
+                                console.error("WEBRTC: Answer creation failed", e);
                             }
-                        }
-                        
-                        // Auto-clear subtitle
-                        setTimeout(() => setCurrentSubtitle(''), 5000);
-                    }
-
-                    if (!pc) return;
-
-                    if (type === 'offer' && userRole === 'patient') {
-                        try {
-                            await pc.setRemoteDescription(new RTCSessionDescription(payload));
-                            await processIceQueue(pc);
-                            const answer = await pc.createAnswer();
-                            await pc.setLocalDescription(answer);
-                            channelRef.current?.publish({ destination: `/app/signal/${roomName}`, body: JSON.stringify({ type: 'answer', payload: answer }) });
-                        } catch (e) {}
-                    } else if (type === 'answer' && userRole === 'doctor') {
-                        try {
-                            if (!pc.currentRemoteDescription) {
-                                 await pc.setRemoteDescription(new RTCSessionDescription(payload));
-                                 await processIceQueue(pc);
+                        } else if (type === 'answer' && userRole === 'doctor') {
+                            console.log("WEBRTC: Received answer, finishing handshake...");
+                            try {
+                                if (pc.signalingState !== 'stable') {
+                                     await pc.setRemoteDescription(new RTCSessionDescription(payload));
+                                     await processIceQueue(pc);
+                                }
+                            } catch (e) {
+                                console.error("WEBRTC: Setting remote description failed", e);
                             }
-                        } catch (e) {}
-                    } else if (type === 'ice-candidate') {
-                        try {
-                            if (pc.remoteDescription) await pc.addIceCandidate(new RTCIceCandidate(payload));
-                            else iceCandidateQueueRef.current.push(payload);
-                        } catch (e) {}
+                        } else if (type === 'ice-candidate') {
+                            try {
+                                if (pc.remoteDescription) {
+                                    await pc.addIceCandidate(new RTCIceCandidate(payload));
+                                } else {
+                                    iceCandidateQueueRef.current.push(payload);
+                                }
+                            } catch (e) {}
+                        }
+                    } catch (err) {
+                        console.error("WEBRTC: Signal processing error", err);
                     }
                 });
             },
             onStompError: (frame) => {
-                console.error('Broker reported error: ' + frame.headers['message']);
+                console.error('STOMP ERROR: ' + frame.headers['message']);
+            },
+            onWebSocketClose: () => {
+                console.log('WEBRTC: Signaling connection closed');
             }
         });
 
@@ -170,65 +209,82 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
 
     const initTranslationPipeline = (stream: MediaStream) => {
         try {
-            // Flexible MIME type to ensure it doesn't crash on Windows/Safari
+            console.log("WEBRTC: Initializing voice capture pipeline...");
+            
+            // CRITICAL FIX: Only pass the AUDIO tracks to the MediaRecorder. 
+            // Encoding both Video + Audio for translation is what causes the NotSupportedError.
+            const audioOnlyStream = new MediaStream(stream.getAudioTracks());
+            
             let options: MediaRecorderOptions = {};
             if (MediaRecorder.isTypeSupported('audio/webm')) { options = { mimeType: 'audio/webm' }; }
+            else if (MediaRecorder.isTypeSupported('audio/ogg')) { options = { mimeType: 'audio/ogg' }; }
             else if (MediaRecorder.isTypeSupported('audio/mp4')) { options = { mimeType: 'audio/mp4' }; }
             
-            const recorder = new MediaRecorder(stream, options);
+            const recorder = new MediaRecorder(audioOnlyStream, options);
             mediaRecorderRef.current = recorder;
             
             // Chunk stream pipeline (Vosk STT capture route)
             recorder.ondataavailable = async (e) => {
                 if (!translationModeRef.current) return;
                 
-                // FIXED: Use direct PeerConnection state to avoid stale React closures
-                const isPeerConnected = peerConnectionRef.current?.connectionState === 'connected';
+                // Allow broadcasting translations as long as we are connected to the signaling server,
+                // even if WebRTC peer-to-peer is still negotiating.
+                const isSignalingConnected = channelRef.current?.connected;
                 
-                if (e.data.size > 0 && channelRef.current && channelRef.current.connected) {
-                    // Send chunk to python backend offline AI service wrapper
-                    const response = await translationService.processAudioChunk(e.data, myLanguageRef.current, peerLanguage);
-                    
-                    if (response.translatedText !== '') {
-                        // Display my local original transcript even if offline for testing visibility
-                        if (onTranscript) onTranscript(userName, response.originalText, '');
+                if (e.data.size > 0 && isSignalingConnected) {
+                    try {
+                        console.log("WEBRTC: Processing audio chunk of size", e.data.size);
+                        // Send chunk to python backend offline AI service wrapper (currently mocked)
+                        const response = await translationService.processAudioChunk(e.data, myLanguageRef.current, peerLanguageRef.current);
                         
-                        // Only broadcast translations over WebRTC if a peer is legitimately connected
-                        if (isPeerConnected) {
-                            channelRef.current.publish({ destination: `/app/signal/${roomName}`, body: JSON.stringify({ 
-                                type: 'translation', 
-                                original: response.originalText,
-                                translated: response.translatedText,
-                                senderName: userName
-                            }) });
+                        if (response.translatedText && response.translatedText !== '') {
+                            // Display MY local original transcript even if offline for testing visibility
+                            console.log("WEBRTC: Local transcript ready:", response.originalText);
+                            if (onTranscript) onTranscript(userName, response.originalText, response.translatedText);
+                            
+                            // Broadcast translations to the other peer over the signaling topic
+                            channelRef.current?.publish({ 
+                                destination: `/app/signal/${roomName}`, 
+                                body: JSON.stringify({ 
+                                    type: 'translation', 
+                                    role: userRole,
+                                    original: response.originalText,
+                                    translated: response.translatedText,
+                                    senderName: userName
+                                }) 
+                            });
                         }
+                    } catch (err) {
+                        console.error("WEBRTC: Translation chunk processing error", err);
                     }
                 }
             };
             
-            // Sample rate latency setup: Send chunk every ~3 seconds
+            // Tuned for Groq Whisper: 3000ms is the optimal window for accuracy
             recorder.start(3000); 
         } catch (err) {
-            console.error("Microphone translation processing isolated due to hardware failure", err);
+            console.error("WEBRTC: Microphone translation setup failed", err);
         }
     };
 
-    // E2E Testing Module: Headless Browser bypass for simulate live voice.
+    // Keep the forceFakeChunk for debug testing if native mic fails
     const forceFakeChunk = async () => {
-        const isPeerConnected = peerConnectionRef.current?.connectionState === 'connected';
+        const isSignalingConnected = channelRef.current?.connected;
         const fakeBlob = new Blob([''], { type: 'audio/webm' });
-        const response = await translationService.processAudioChunk(fakeBlob, myLanguageRef.current, peerLanguage);
+        const response = await translationService.processAudioChunk(fakeBlob, myLanguageRef.current, peerLanguageRef.current);
                         
-        if (response.translatedText !== '') {
+        if (response.translatedText !== '' && isSignalingConnected) {
             if (onTranscript) onTranscript(userName, response.originalText, '');
-            if (isPeerConnected && channelRef.current && channelRef.current.connected) {
-                 channelRef.current.publish({ destination: `/app/signal/${roomName}`, body: JSON.stringify({ 
-                     type: 'translation', 
-                     original: response.originalText,
-                     translated: response.translatedText,
-                     senderName: userName
-                 }) });
-            }
+            channelRef.current?.publish({ 
+                destination: `/app/signal/${roomName}`, 
+                body: JSON.stringify({ 
+                    type: 'translation', 
+                    role: userRole,
+                    original: response.originalText,
+                    translated: response.translatedText,
+                    senderName: userName
+                }) 
+            });
         }
     };
 
@@ -236,11 +292,11 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
 
     const initConnection = async () => {
         try {
+            console.log("WEBRTC: Requesting media permissions...");
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             if (localVideoRef.current) localVideoRef.current.srcObject = stream;
             setIsMediaActive(true);
             
-            // Bridge our local microphone to the Translation Engine immediately
             initTranslationPipeline(stream);
 
             const pc = new RTCPeerConnection(servers);
@@ -249,20 +305,23 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
             stream.getTracks().forEach(track => pc.addTrack(track, stream));
 
             pc.ontrack = (event) => {
+                console.log("WEBRTC: Received remote track");
                 if (remoteVideoRef.current) {
-                    if (!remoteVideoRef.current.srcObject) remoteVideoRef.current.srcObject = new MediaStream();
-                    const remoteStream = remoteVideoRef.current.srcObject as MediaStream;
-                    event.streams[0].getTracks().forEach(track => {
-                        if (!remoteStream.getTracks().find(t => t.id === track.id)) remoteStream.addTrack(track);
-                    });
+                    remoteVideoRef.current.srcObject = event.streams[0];
                 }
             };
 
             pc.onicecandidate = (event) => {
-                if (event.candidate && channelRef.current && channelRef.current.connected) channelRef.current.publish({ destination: `/app/signal/${roomName}`, body: JSON.stringify({ type: 'ice-candidate', payload: event.candidate.toJSON() }) });
+                if (event.candidate && channelRef.current?.connected) {
+                    channelRef.current.publish({ 
+                        destination: `/app/signal/${roomName}`, 
+                        body: JSON.stringify({ type: 'ice-candidate', role: userRole, payload: event.candidate.toJSON() }) 
+                    });
+                }
             };
 
             pc.onconnectionstatechange = () => {
+                console.log("WEBRTC: Connection state changed to:", pc.connectionState);
                 if (pc.connectionState === 'connected') {
                     setConnectionState('connected');
                     toast.success("Securely connected!");
@@ -272,9 +331,22 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
             };
 
             setConnectionState('connecting');
-            if (channelRef.current && channelRef.current.connected) channelRef.current.publish({ destination: `/app/signal/${roomName}`, body: JSON.stringify({ type: 'ready', role: userRole }) });
+            
+            // Wait a brief moment for PC set up then signal readiness
+            setTimeout(() => {
+                if (channelRef.current?.connected) {
+                    console.log("WEBRTC: Signaling readiness as", userRole);
+                    channelRef.current.publish({ 
+                        destination: `/app/signal/${roomName}`, 
+                        body: JSON.stringify({ type: 'ready', role: userRole }) 
+                    });
+                } else {
+                    toast.error("Signaling server not connected. Please refresh.");
+                }
+            }, 500);
 
         } catch (error) {
+            console.error("WEBRTC: Media access error", error);
             toast.error("Please allow camera/microphone permissions.");
         }
     };
@@ -284,30 +356,37 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
             {/* Hidden E2E Headless Trigger Button */}
             <button id="e2e-force-chunk" onClick={forceFakeChunk} className="fixed top-0 right-0 w-2 h-2 opacity-0 z-[9999]" aria-hidden="true"></button>
             
-            {/* Translation Status UI Indicator */}
+            {/* Translation Status UI Indicator - REPOSITIONED TO RIGHT AS REQUESTED */}
             {isMediaActive && (
-                <div className="absolute top-4 left-4 z-40 bg-black/60 backdrop-blur-md rounded-xl px-4 py-2 flex flex-col gap-2 border border-white/10 shadow-lg group">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-2">
-                            <Languages className="w-4 h-4 text-white" />
-                            <span className="text-white text-xs font-bold tracking-widest uppercase">AI Voice Translation</span>
-                        </div>
-                        <div className="flex items-center gap-2 border-l border-white/20 pl-4">
-                            <div className={`w-2.5 h-2.5 rounded-full ${translationModeRef.current ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]' : 'bg-slate-500'}`}></div>
-                            <span className={`text-xs font-black uppercase ${translationModeRef.current ? 'text-green-400' : 'text-slate-400'}`}>{translationModeRef.current ? 'Active' : 'Off'}</span>
+                <div className="absolute top-4 right-4 z-40 bg-black/70 backdrop-blur-xl rounded-2xl px-6 py-5 flex flex-col gap-4 border border-white/20 shadow-[-10px_10px_40px_rgba(0,0,0,0.5)] group transition-all hover:bg-black/80 ring-1 ring-white/10">
+                    <div className="flex items-center justify-between gap-8">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+                                <Languages className="w-5 h-5 text-indigo-400" />
+                            </div>
+                            <div>
+                                <span className="block text-white text-[10px] font-black tracking-widest uppercase mb-0.5">AI Engine</span>
+                                <span className={`block text-[10px] font-black uppercase ${translationModeRef.current ? 'text-green-400' : 'text-slate-400'}`}>{translationModeRef.current ? 'Linked & Translating' : 'Direct Feed Only'}</span>
+                            </div>
                         </div>
                     </div>
                     
-                    {/* Dynamic Language Selection To verify pipeline universally works */}
-                    <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs text-slate-300 font-medium">
-                        <span>My Speech:</span>
-                        <select 
-                            className="bg-slate-800 text-white border border-slate-600 rounded px-2 py-0.5 outline-none cursor-pointer"
-                            value={myLanguageState}
-                            onChange={(e) => setMyLanguage(e.target.value)}
-                        >
-                            {INDIAN_LANGUAGES.map(lang => <option key={lang}>{lang}</option>)}
-                        </select>
+                    <div className="space-y-4 pt-4 border-t border-white/10">
+                        {/* SELF LANGUAGE - NOW STATIC */}
+                        <div className="flex flex-col gap-1.5">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">My Pipeline:</span>
+                            <div className="bg-slate-800/50 text-indigo-400 border border-indigo-500/20 rounded-xl px-3 py-2 text-xs font-black tracking-wide shadow-inner">
+                                {myLanguageState.toUpperCase()} {'·'} SOURCE
+                            </div>
+                        </div>
+
+                        {/* PEER LANGUAGE - NOW STATIC/AUTO-MAPPED */}
+                        <div className="flex flex-col gap-1.5">
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Peer's Pipeline ({userRole === 'doctor' ? 'Patient' : 'Doctor'}):</span>
+                            <div className="bg-emerald-900/20 text-emerald-400 border border-emerald-500/20 rounded-xl px-3 py-2 text-xs font-black tracking-wide shadow-inner">
+                                {peerLanguageState.toUpperCase()} {'·'} TARGET
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -344,12 +423,19 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
                             </div>
                         )}
                         
-                        {/* THE AI TRANSLATION SUBTITLE OVERLAY */}
+                        {/* THE AI TRANSLATION SUBTITLE OVERLAY - REPOSITIONED TO RIGHT */}
                         {currentSubtitle && (
-                            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-[90%] z-50 text-center animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                <div className="inline-block bg-black/85 backdrop-blur-lg border border-white/10 px-6 py-3 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] text-white font-bold text-lg leading-relaxed">
-                                    <Languages className="w-4 h-4 inline-block mr-2 text-primary-400 relative -top-0.5" />
+                            <div className="absolute bottom-10 right-10 max-w-[85%] z-50 text-right animate-in fade-in slide-in-from-right-8 duration-700">
+                                <div className="inline-block bg-indigo-600/90 backdrop-blur-2xl border border-white/20 px-8 py-5 rounded-[2.5rem] rounded-tr-md shadow-[0_30px_70px_rgba(0,0,0,0.5)] text-white font-bold text-2xl leading-snug tracking-tight">
+                                    <div className="flex items-center gap-3 justify-end mb-2 opacity-60">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.3em]">{userRole === 'doctor' ? 'PATIENT' : 'DOCTOR'}</span>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
+                                    </div>
                                     {currentSubtitle}
+                                    <div className="mt-2 flex items-center justify-end gap-2 opacity-50">
+                                        <Languages className="w-4 h-4" />
+                                        <span className="text-[10px] font-bold">LIVE {peerLanguageState.toUpperCase()} {'->'} {myLanguageState.toUpperCase()}</span>
+                                    </div>
                                 </div>
                             </div>
                         )}
