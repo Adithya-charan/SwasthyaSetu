@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button';
 
 interface AppointmentCardProps {
     name: string;
-    roleLabel: 'Doctor' | 'Patient';
+    roleLabel: string;
     date: string;
     time: string;
     status: 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
