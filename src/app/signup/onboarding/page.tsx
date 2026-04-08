@@ -21,120 +21,115 @@ function OnboardingContent() {
     const [formData, setFormData] = useState({
         fullName: '',
         age: '',
-        hospital: '', // Required for Doctor/Pharmacist
+        hospital: '', 
         gender: '',
         email: '',
         phone: '',
-        specialization: '', // Doctor
-        licenseNumber: '', // Doctor/Pharmacist
+        specialization: '', 
+        licenseNumber: '', 
         experience: '',
+        adminCode: '',
     });
 
     const updateForm = (key: string, value: any) => {
         setFormData(prev => ({ ...prev, [key]: value }));
     };
 
-    const nextStep = () => setStep(prev => prev + 1);
+    const isPatient = role === 'patient';
+    const isDoctor = role === 'doctor';
+    const isPharmacist = role === 'pharmacist';
+    const isAdmin = role === 'admin';
+
+    const nextStep = () => {
+        // Patients only have 1 step
+        if (isPatient) {
+            handleComplete();
+            return;
+        }
+        setStep(prev => prev + 1);
+    };
+    
     const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
     const handleComplete = async () => {
-        // Here you would save the profile to the backend
-
-        // Then log the user in (simulated)
-        await login(formData.email || `user-${Date.now()}@example.com`, 'password123', role, formData.fullName);
-
-        // The login function in AuthContext will trigger the socket event
-        // Then we redirect to the dashboard
-        router.push(`/${role}`);
+        await login(formData.email || `user-${Date.now()}@example.com`, 'password123', role, formData.fullName || role);
+        router.push(`/${role}/dashboard`);
     };
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">
-            {/* Header */}
             <header className="bg-white border-b border-slate-200 py-4 px-6 fixed top-0 w-full z-10">
                 <div className="max-w-5xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Activity className="w-6 h-6 text-primary-500" />
-                        <span className="font-bold text-xl text-slate-900">VirtualCare</span>
+                        <span className="font-bold text-xl text-slate-900">SwasthyaSetu</span>
                     </div>
                 </div>
             </header>
 
-            {/* Main Content */}
-            <main className="flex-1 flex items-center justify-center pt-24 pb-12 px-4">
+            <main className="flex-1 flex items-center justify-center pt-24 pb-12 px-4 text-slate-900">
                 <div className="w-full max-w-2xl">
-                    <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
-                        <div className="p-8">
-                            <div className="text-center mb-8">
-                                <h2 className="text-2xl font-bold text-slate-900 capitalize">
-                                    {role} Profile Setup
-                                </h2>
-                                <p className="text-slate-500">Please complete your profile to continue.</p>
+                    <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
+                        <div className="p-8 sm:p-12">
+                            <div className="mb-10 text-center">
+                                <h1 className="text-3xl font-bold mb-2">Complete your Profile</h1>
+                                <p className="text-slate-500">Welcome to the platform, {role}!</p>
                             </div>
 
                             <AnimatePresence mode="wait">
                                 {step === 1 && (
                                     <motion.div
                                         key="step1"
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        className="space-y-4"
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        className="space-y-6"
                                     >
-                                        <Input
-                                            label="Full Name"
-                                            placeholder="e.g. Dr. John Doe"
-                                            icon={<User className="w-4 h-4" />}
-                                            value={formData.fullName}
-                                            onChange={(e) => updateForm('fullName', e.target.value)}
-                                        />
-
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <Input
-                                                label="Age"
-                                                type="number"
-                                                placeholder="e.g. 35"
-                                                icon={<Calendar className="w-4 h-4" />}
-                                                value={formData.age}
-                                                onChange={(e) => updateForm('age', e.target.value)}
-                                            />
-                                            <div className="space-y-1.5">
-                                                <label className="block text-sm font-medium text-slate-700">Gender</label>
-                                                <select
-                                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-primary-100 focus:border-primary-500 outline-none"
-                                                    value={formData.gender}
-                                                    onChange={(e) => updateForm('gender', e.target.value)}
-                                                >
-                                                    <option value="">Select</option>
-                                                    <option value="male">Male</option>
-                                                    <option value="female">Female</option>
-                                                </select>
+                                        {isPatient ? (
+                                            <div className="space-y-4">
+                                                <p className="text-center text-slate-600 mb-6">We only need your age to personalize your healthcare experience.</p>
+                                                <Input
+                                                    label="Your Age"
+                                                    type="number"
+                                                    placeholder="Enter your age"
+                                                    icon={<Calendar className="w-4 h-4" />}
+                                                    value={formData.age}
+                                                    onChange={(e) => updateForm('age', e.target.value)}
+                                                />
                                             </div>
-                                        </div>
-
-                                        {(role === 'doctor' || role === 'pharmacist') && (
-                                            <Input
-                                                label="Hospital / Pharmacy Name"
-                                                placeholder={role === 'doctor' ? "e.g. General Hospital" : "e.g. City Pharmacy"}
-                                                icon={<Building className="w-4 h-4" />}
-                                                value={formData.hospital}
-                                                onChange={(e) => updateForm('hospital', e.target.value)}
-                                            />
-                                        )}
-
-                                        {role === 'doctor' && (
-                                            <Input
-                                                label="Specialization"
-                                                placeholder="e.g. Cardiology"
-                                                icon={<Activity className="w-4 h-4" />}
-                                                value={formData.specialization}
-                                                onChange={(e) => updateForm('specialization', e.target.value)}
-                                            />
+                                        ) : (
+                                            <>
+                                                <Input
+                                                    label="Full Name"
+                                                    placeholder={isAdmin ? "Account Name" : "e.g. Dr. John Doe"}
+                                                    icon={<User className="w-4 h-4" />}
+                                                    value={formData.fullName}
+                                                    onChange={(e) => updateForm('fullName', e.target.value)}
+                                                />
+                                                {(isDoctor || isPharmacist) && (
+                                                    <Input
+                                                        label={isDoctor ? "Hospital Name" : "Pharmacy Name"}
+                                                        placeholder="Where do you practice?"
+                                                        icon={<Building className="w-4 h-4" />}
+                                                        value={formData.hospital}
+                                                        onChange={(e) => updateForm('hospital', e.target.value)}
+                                                    />
+                                                )}
+                                                {isAdmin && (
+                                                    <Input
+                                                        label="Admin Security Code"
+                                                        type="password"
+                                                        placeholder="Enter provided admin code"
+                                                        value={formData.adminCode}
+                                                        onChange={(e) => updateForm('adminCode', e.target.value)}
+                                                    />
+                                                )}
+                                            </>
                                         )}
                                     </motion.div>
                                 )}
 
-                                {step === 2 && (
+                                {step === 2 && !isPatient && (
                                     <motion.div
                                         key="step2"
                                         initial={{ opacity: 0, x: 20 }}
@@ -142,53 +137,59 @@ function OnboardingContent() {
                                         exit={{ opacity: 0, x: -20 }}
                                         className="space-y-6"
                                     >
-                                        <div className="p-4 bg-yellow-50 text-yellow-800 rounded-lg flex items-start gap-3">
+                                        <div className="p-4 bg-primary-50 text-primary-800 rounded-2xl flex items-start gap-3 border border-primary-100">
                                             <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                                            <p className="text-sm">Please provide accurate professional details. Your account will be verified by our admin team.</p>
+                                            <p className="text-sm">Please verify your professional credentials. These will be reviewed for verification.</p>
                                         </div>
 
-                                        <Input
-                                            label="License Number"
-                                            placeholder="License ID"
-                                            value={formData.licenseNumber}
-                                            onChange={(e) => updateForm('licenseNumber', e.target.value)}
-                                        />
-
-                                        <Input
-                                            label="Years of Experience"
-                                            type="number"
-                                            placeholder="e.g. 10"
-                                            value={formData.experience}
-                                            onChange={(e) => updateForm('experience', e.target.value)}
-                                        />
-
-                                        <Input
-                                            label="Email Address"
-                                            type="email"
-                                            value={formData.email}
-                                            onChange={(e) => updateForm('email', e.target.value)}
-                                        />
+                                        {isAdmin ? (
+                                            <div className="space-y-6">
+                                                <Input label="Platform ID" placeholder="PT-XXXX" />
+                                                <Input label="Access Level" placeholder="Global / Regional" />
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Input
+                                                    label="Professional License Number"
+                                                    placeholder="e.g. MED-12345"
+                                                    value={formData.licenseNumber}
+                                                    onChange={(e) => updateForm('licenseNumber', e.target.value)}
+                                                />
+                                                {isDoctor && (
+                                                    <Input
+                                                        label="Medical Specialization"
+                                                        placeholder="e.g. Neurosurgeon"
+                                                        value={formData.specialization}
+                                                        onChange={(e) => updateForm('specialization', e.target.value)}
+                                                    />
+                                                )}
+                                                <Input
+                                                    label="Years of Experience"
+                                                    type="number"
+                                                    placeholder="How many years?"
+                                                    value={formData.experience}
+                                                    onChange={(e) => updateForm('experience', e.target.value)}
+                                                />
+                                            </>
+                                        )}
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
-                            <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-100">
-                                <Button
-                                    variant="ghost"
-                                    onClick={prevStep}
-                                    disabled={step === 1}
-                                    className={step === 1 ? 'invisible' : ''}
-                                >
-                                    <ChevronLeft className="w-4 h-4 mr-2" /> Back
-                                </Button>
+                            <div className="flex flex-col sm:flex-row gap-4 mt-12 pt-8 border-t border-slate-100">
+                                {!isPatient && step > 1 && (
+                                    <Button variant="ghost" onClick={prevStep} className="flex-1 py-6 rounded-2xl">
+                                        <ChevronLeft className="w-4 h-4 mr-2" /> Previous
+                                    </Button>
+                                )}
 
-                                {step < 2 ? (
-                                    <Button onClick={nextStep}>
-                                        Next Step <ChevronRight className="w-4 h-4 ml-2" />
+                                {isPatient || step === 2 ? (
+                                    <Button onClick={handleComplete} className="flex-1 py-6 rounded-2xl shadow-xl shadow-primary-600/20">
+                                        Complete Registration <Check className="w-4 h-4 ml-2" />
                                     </Button>
                                 ) : (
-                                    <Button onClick={handleComplete}>
-                                        Complete & Login <Check className="w-4 h-4 ml-2" />
+                                    <Button onClick={nextStep} className="flex-1 py-6 rounded-2xl shadow-xl shadow-primary-600/20">
+                                        Next Step <ChevronRight className="w-4 h-4 ml-2" />
                                     </Button>
                                 )}
                             </div>
