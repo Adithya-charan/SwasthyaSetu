@@ -1,17 +1,28 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Calendar, Pill, ActivitySquare, ArrowRight, Video, Clock } from 'lucide-react';
+import { Calendar, Pill, ActivitySquare, ArrowRight, Video, Clock, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import StatCard from '@/components/shared/StatCard';
 import AppointmentCard from '@/components/shared/AppointmentCard';
-
-const MOCK_UPCOMING = [
-    { id: 1, name: 'Dr. Sarah Smith', roleLabel: 'Cardiology', date: 'Oct 24, 2024', time: '10:00 AM', status: 'CONFIRMED' as const },
-    { id: 2, name: 'Dr. John Doe', roleLabel: 'Dermatology', date: 'Oct 28, 2024', time: '02:30 PM', status: 'PENDING' as const },
-    { id: 3, name: 'Dr. Emily Chen', roleLabel: 'General Practice', date: 'Nov 02, 2024', time: '11:15 AM', status: 'CONFIRMED' as const },
-];
+import { fetchApi } from '@/lib/api';
 
 export default function PatientDashboard() {
+    const [appointments, setAppointments] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const loadDashboard = async () => {
+            try {
+                const data = await fetchApi('/api/appointments/my');
+                setAppointments(data.data.content || []);
+            } catch (error) {
+                console.error("DASHBOARD: Failed to fetch patient data", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadDashboard();
+    }, []);
     // Countdown timer logic
     const [timeLeft, setTimeLeft] = useState<{ hours: number, minutes: number, seconds: number, totalMs: number } | null>(null);
     const [isJoinActive, setIsJoinActive] = useState(false);
@@ -102,16 +113,20 @@ export default function PatientDashboard() {
                             View All <ArrowRight className="w-4 h-4" />
                         </Link>
                     </div>
-                    {MOCK_UPCOMING.length > 0 ? (
+                    {isLoading ? (
+                         <div className="flex items-center justify-center p-12 bg-white rounded-2xl border border-slate-100">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                        </div>
+                    ) : appointments.length > 0 ? (
                         <div className="space-y-4">
-                            {MOCK_UPCOMING.map(apt => (
+                            {appointments.map((apt: any) => (
                                 <AppointmentCard
                                     key={apt.id}
-                                    name={apt.name}
-                                    roleLabel={apt.roleLabel as any}
-                                    date={apt.date}
-                                    time={apt.time}
-                                    status={apt.status}
+                                    name={`Dr. #${apt.doctorId?.substring(0, 8)}`}
+                                    roleLabel="Specialist"
+                                    date={new Date(apt.scheduledAt).toLocaleDateString()}
+                                    time={new Date(apt.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    status={apt.status.toUpperCase()}
                                     actionButtonText={apt.status === 'CONFIRMED' ? 'View Details' : undefined}
                                     onActionClick={() => window.location.href = `/patient/consultation/${apt.id}`}
                                 />

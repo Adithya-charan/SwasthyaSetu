@@ -1,5 +1,7 @@
 'use client';
 import { useState } from 'react';
+import { fetchApi } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { Pill, User, Search, AlertTriangle, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -14,13 +16,17 @@ const MOCK_STOCK = [
     { name: 'Amoxicillin 500mg', inStock: true },
     { name: 'Paracetamol 650mg', inStock: true },
     { name: 'Metformin 500mg', inStock: true },
-    { name: 'Atorvastatin 20mg', inStock: false }, // marked out of stock by pharmacist
-    { name: 'Azithromycin 250mg', inStock: false }, // marked out of stock by pharmacist
+    { name: 'Atorvastatin 20mg', inStock: false }, 
+    { name: 'Azithromycin 250mg', inStock: false }, 
 ];
 
 export default function DoctorPrescriptions() {
+    const { user } = useAuth();
     const [medSearch, setMedSearch] = useState('');
     const [selectedMeds, setSelectedMeds] = useState<string[]>([]);
+    const [patientId, setPatientId] = useState('');
+    const [notes, setNotes] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     
     const filteredStock = medSearch ? MOCK_STOCK.filter(m => m.name.toLowerCase().includes(medSearch.toLowerCase())) : [];
 
@@ -32,6 +38,39 @@ export default function DoctorPrescriptions() {
         if (!selectedMeds.includes(name)) {
             setSelectedMeds([...selectedMeds, name]);
             setMedSearch('');
+        }
+    };
+
+    const handleIssuePrescription = async () => {
+        if (!patientId || selectedMeds.length === 0) {
+            toast.error("Please select a patient and at least one medication.");
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await fetchApi('/api/prescriptions', {
+                method: 'POST',
+                body: JSON.stringify({
+                    patientId,
+                    medications: selectedMeds.map(name => ({
+                        name,
+                        dosage: '1-0-1',
+                        duration: '5 days',
+                        instructions: 'After meals'
+                    })),
+                    doctorNotes: notes
+                })
+            });
+            toast.success("Prescription Issued and Stored!");
+            setSelectedMeds([]);
+            setPatientId('');
+            setNotes('');
+        } catch (error) {
+            console.error("RX: Failed to issue prescription", error);
+            toast.error("Failed to store prescription. Using mock fallback for UI demonstration.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 

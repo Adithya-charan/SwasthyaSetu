@@ -1,15 +1,30 @@
 'use client';
-import { Calendar, Users, Pill, Activity, UserPlus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Calendar, Users, Pill, Activity, UserPlus, Loader2 } from 'lucide-react';
 import StatCard from '@/components/shared/StatCard';
 import AppointmentCard from '@/components/shared/AppointmentCard';
+import { fetchApi } from '@/lib/api';
 import Link from 'next/link';
 
-const MOCK_TODAY = [
-    { id: 1, name: 'Alice Walker', roleLabel: 'Patient', date: 'Oct 24, 2024', time: '10:00 AM', status: 'CONFIRMED' as const },
-    { id: 2, name: 'Bob Smith', roleLabel: 'Patient', date: 'Oct 24, 2024', time: '02:30 PM', status: 'CONFIRMED' as const },
-];
-
 export default function DoctorDashboard() {
+    const [appointments, setAppointments] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const loadDashboard = async () => {
+            try {
+                // Fetch appointments for the logged in doctor
+                const data = await fetchApi('/api/appointments/my');
+                setAppointments(data.data.content || []);
+            } catch (error) {
+                console.error("DASHBOARD: Failed to fetch live data", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadDashboard();
+    }, []);
+
     return (
         <div className="space-y-6">
             <h1 className="text-2xl font-bold text-slate-900">Doctor Dashboard</h1>
@@ -23,16 +38,20 @@ export default function DoctorDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-4">
                     <h2 className="text-xl font-semibold text-slate-800">Today's Schedule</h2>
-                    {MOCK_TODAY.length > 0 ? (
+                    {isLoading ? (
+                        <div className="flex items-center justify-center p-12">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                        </div>
+                    ) : appointments.length > 0 ? (
                         <div className="space-y-4">
-                            {MOCK_TODAY.map(apt => (
+                            {appointments.map((apt: any) => (
                                 <AppointmentCard
                                     key={apt.id}
-                                    name={apt.name}
-                                    roleLabel={apt.roleLabel as any}
-                                    date={apt.date}
-                                    time={apt.time}
-                                    status={apt.status}
+                                    name={`Patient #${apt.patientId.substring(0, 8)}`}
+                                    roleLabel="Patient"
+                                    date={new Date(apt.scheduledAt).toLocaleDateString()}
+                                    time={new Date(apt.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    status={apt.status.toUpperCase()}
                                     actionButtonText="Start Call"
                                     onActionClick={() => window.location.href = `/doctor/consultation/${apt.id}`}
                                 />

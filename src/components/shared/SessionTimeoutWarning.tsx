@@ -8,7 +8,11 @@ export default function SessionTimeoutWarning() {
     const { logout } = useAuth();
     const [showWarning, setShowWarning] = useState(false);
     const [countdown, setCountdown] = useState(120);
-    const [lastActivity, setLastActivity] = useState(Date.now());
+    const [lastActivity, setLastActivity] = useState<number | null>(null);
+
+    useEffect(() => {
+        setLastActivity(Date.now());
+    }, []);
     
     const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 minutes
 
@@ -25,11 +29,12 @@ export default function SessionTimeoutWarning() {
         events.forEach(e => window.addEventListener(e, resetTimer));
         
         const checkInterval = setInterval(() => {
+            if (!lastActivity) return;
             const now = Date.now();
             if (now - lastActivity > INACTIVITY_LIMIT && !showWarning) {
                 setShowWarning(true);
             }
-        }, 30000); // Check every 30 seconds
+        }, 30000); 
 
         return () => {
             events.forEach(e => window.removeEventListener(e, resetTimer));

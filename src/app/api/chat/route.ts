@@ -6,7 +6,10 @@ export async function POST(req: Request) {
   try {
     const { messages, pathname, userRole, patientLang } = await req.json();
 
-    if (!process.env.GROQ_API_KEY) {
+    const primaryKey = process.env.GROQ_API_KEY;
+    const secondaryKey = process.env.GROQ_API_KEY_SECONDARY;
+
+    if (!primaryKey && !secondaryKey) {
       return new Response(JSON.stringify({ error: "API key missing" }), { status: 500 });
     }
 
@@ -16,30 +19,36 @@ export async function POST(req: Request) {
       patientLang: patientLang || "Telugu" 
     });
 
-    // Direct fetch to Groq API to bypass corrupted SDK imports
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...messages.map((m: any) => ({ role: m.role, content: m.content }))
-        ],
-        stream: true,
-        temperature: 0.7
-      })
-    });
+    const callGroq = async (apiKey: string) => {
+      return await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...messages.map((m: any) => ({ role: m.role, content: m.content }))
+          ],
+          stream: true,
+          temperature: 0.7
+        })
+      });
+    };
+
+    let response = await callGroq(primaryKey!);
+
+    // Fallback to secondary key if primary key fails (e.g. rate limit 429 or unauthorized 401)
+    if ((!response.ok && (response.status === 401 || response.status === 429)) && secondaryKey) {
+      console.warn(`Chat API: Primary key failed with ${response.status}. Trying secondary key...`);
+      response = await callGroq(secondaryKey);
+    }
 
     if (!response.ok) {
       const err = await response.text();
       console.error("Groq API Error Response:", err);
-      if (response.status === 401) {
-        return new Response(JSON.stringify({ error: "Invalid API Key. Please check your .env file." }), { status: 401 });
-      }
       return new Response(JSON.stringify({ error: `Groq error: ${response.status}` }), { status: response.status });
     }
 

@@ -62,7 +62,21 @@ export default function VideoConsult({ roomName, userName, userRole, onCallEnd, 
     };
 
     useEffect(() => {
-        const wsBase = process.env.NEXT_PUBLIC_WS_URL || `${window.location.protocol}//${window.location.hostname}:8080`;
+        const isBrowser = typeof window !== 'undefined';
+        const isVercel = isBrowser && (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('swasthyasetu'));
+        
+        // Priority: Env Var > Vercel Detection > Localhost Fallback
+        let wsBase = process.env.NEXT_PUBLIC_WS_URL;
+        if (!wsBase) {
+            if (isVercel) {
+                // For Vercel, use the same host but ensure it doesn't default to :8080 unless explicitly told
+                wsBase = `${window.location.protocol}//${window.location.hostname}`;
+            } else {
+                wsBase = `${window.location.protocol}//${window.location.hostname}:8080`;
+            }
+        }
+        
+        console.log("WEBRTC: Connecting to signaling at:", wsBase);
         const socket = new SockJS(`${wsBase}/ws/webrtc`);
         const stompClient = new Client({
             webSocketFactory: () => socket,

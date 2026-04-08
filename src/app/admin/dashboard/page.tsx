@@ -1,9 +1,14 @@
 'use client';
+import { useState, useEffect } from 'react';
 import StatCard from '@/components/shared/StatCard';
 import { Users, UserCheck, Calendar, Pill, Activity } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, CartesianGrid, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, CartesianGrid } from 'recharts';
 
 export default function AdminDashboard() {
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => { setIsMounted(true); }, []);
+
+    if (!isMounted) return <div className="min-h-screen bg-slate-50 animate-pulse" />;
     // Mock Chart Data
     const barData = [
         { name: 'Mon', appointments: 12 },
