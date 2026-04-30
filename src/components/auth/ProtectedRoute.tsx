@@ -2,9 +2,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { CheckCircle } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-    const { user, isLoading } = useAuth();
+    const { user, isLoading, logout } = useAuth();
     const router = useRouter();
     const [isMounted, setIsMounted] = useState(false);
 
@@ -15,6 +17,8 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     useEffect(() => {
         if (!isLoading && !user && isMounted) {
             router.push('/login');
+        } else if (!isLoading && user && user.accountStatus === 'PENDING' && isMounted) {
+            router.push('/waiting-approval');
         }
     }, [isLoading, user, router, isMounted]);
 
@@ -28,6 +32,11 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
     if (!user) {
         return null; // Will redirect shortly
+    }
+
+    // Check if account is still pending approval
+    if (user.accountStatus === 'PENDING') {
+        return null; // Will redirect in useEffect
     }
 
     return <>{children}</>;

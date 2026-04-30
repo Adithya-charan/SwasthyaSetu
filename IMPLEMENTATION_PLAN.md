@@ -1,29 +1,52 @@
-# Implementation Plan: Fixing Vercel Deployment & Backend Integration
+# SwasthyaSetu Rewrite - Implementation Plan
 
-The user is facing issues with Vercel deployment: video not connecting across tabs, database not storing data, role-based dashboards not fully functional, and console errors.
+## Phase 1: Authentication & Onboarding Overhaul
+- [x] Implement global language context and initial language selector screen.
+- [x] Remove existing signup/login flows.
+- [x] Build new multi-step signup: Role Selection -> Form (Role-specific) -> OTP.
+- [x] Implement Admin Approval logic (Users stay pending until admin action).
+- [x] Build new OTP-based Login flow (Phone + Password -> OTP -> JWT).
+- [x] Set up basic backend endpoints for new Auth flow (Registration, OTP, Approval).
+- [x] Update `ProtectedRoute.tsx` to handle `account_status` (pending/active).
 
-## Problem Analysis
-1.  **Connectivity & Security (Mixed Content)**: Vercel serves over `https`. If the backend is on `http`, browsers block requests. Handling of `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL` needs to be dynamic.
-2.  **WebSocket/WebRTC Signaling**: The signaling server port (8080) is hardcoded or incorrectly guessed for Vercel, leading to "Connection Refused" or "Mixed Content" errors.
-3.  **Mock Data vs. Live Data**: Most dashboards (`Admin`, `Doctor`, etc.) use `MOCK_DATA`. The `AuthContext` has a fallback to a mock user. This is why data is "not storing"—it's not being sent to the backend.
-4.  **Role Access**: Incorrect redirect paths or failed authentication logic (using local storage mocks) might prevent proper dashboard loading.
+## Phase 2: Admin Dashboard & Monitoring
+- [x] Build "Pending Approvals" dashboard section (Doctors, Patients, Pharmacists).
+- [x] Build "User Management" (`/admin/users`) with search, filter, and actions (Suspend, Delete).
+- [x] Build "Activity Monitoring" (Real-time Socket.io table for logins/logouts).
+- [x] Update "Platform Analytics" (`/admin/dashboard`) to use real data.
+- [x] Build "System Broadcast" feature (`/admin/broadcast`).
+- [x] Build "Prescription Monitor" for admins.
 
-## Detailed Steps
+## Phase 3: Video Calling & WebRTC (Replacing LiveKit/Jitsi)
+- [x] Remove `livekit-client` and `@jitsi/react-sdk` dependencies and usage.
+- [x] Build new WebRTC signaling logic in the Node.js Express server using Socket.io.
+- [x] Create the new Video Call UI (large remote, PiP local, controls, connection state).
+- [x] Implement slide-in Chat Panel with Socket.io real-time text chat.
+- [x] Implement File/Image sharing in chat with Tesseract.js OCR for medical docs.
+- [x] Build the Doctor Post-Call Prescription Modal and backend integration.
 
-### Phase 1: Fixing Infrastructure & Security
-1.  **Update `AuthContext.tsx`**:
-    *   Implement dynamic protocol detection (`https` vs `http`).
-    *   Ensure `NEXT_PUBLIC_API_URL` defaults to a secure version if on Vercel.
-2.  **Update `VideoConsult.tsx`**:
-    *   Fix `wsBase` to use `wss` if the page is `https`.
-    *   Remove hardcoded `:8080` for the signaling server in production.
+## Phase 4: Global AI Chatbot & Translations
+- [x] Create floating AI Chatbot component accessible everywhere.
+- [x] Implement Navigation Commands using AI intent parsing.
+- [x] Integrate Web Speech API for voice input to text.
+- [x] Implement Voice Password entry for the login page.
+- [x] Integrate chat-based message translation in the Video call chat and Global chatbot.
 
-### Phase 2: Connecting Dashboards to Backend
-1.  **Implement API Services**: Create centralized fetch logic that handles base URLs and authorization headers.
-2.  **Connect Admin Dashboard**: Replace pie/bar chart mock data with real platform stats.
-3.  **Connect Doctor Dashboard**: Fetch real appointments for the logged-in doctor.
-4.  **Connect Patient Dashboard**: Fetch real prescriptions and medical history.
+## Phase 5: Pharmacist Portal & Payments
+- [x] Build Real-time Prescription Queue (`/pharmacist/prescription`) via Socket.io.
+- [x] Build Medicine Fulfillment & Billing flow.
+- [x] Implement Payment Request feature (In-app notification + SMS placeholder).
+- [x] Build Inventory Tracker (`/pharmacist/inventory`) with low-stock alerts.
+- [x] Build Order History page.
 
-### Phase 3: Final Polishing & Verification
-1.  **Handle Console Errors**: Audit for common Vercel errors.
-2.  **Verify WebRTC**: Ensure signaling works between a 'Doctor' tab and a 'Patient' tab.
+## Phase 6: Patient & Doctor Portals & Data Reset
+- [x] Update Patient Records (`/patient/records`) and Symptom Checker.
+- [x] Build Reminders system.
+- [x] Update Doctor Dashboard, Patient Records view, Schedule manager.
+- [x] Wipe existing dummy data from DB initialization scripts.
+- [x] Seed database with requested Indian names (8-10 Doctors, 6-8 Patients, 1 Pharmacist).
+
+## Phase 7: Backend & Database Schema Updates
+- [x] Update MySQL/PostgreSQL schema for users (language_preference, status, etc.).
+- [x] Update MongoDB schema for call_sessions, prescriptions_v2, payment_records, otp_records.
+- [x] Ensure robust error handling, loading states, and responsive design across all new UI.

@@ -1,0 +1,37 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+// Mock appointments data - emptied per user request
+const appointments: any[] = [];
+
+export async function GET(request: NextRequest) {
+  // For admin, return all appointments
+  // In a real app, this would check for admin role
+  return NextResponse.json({ appointments });
+}
+
+export async function POST(request: NextRequest) {
+  // Create new appointment
+  const body = await request.json();
+  const newAppointment = {
+    id: appointments.length + 1,
+    ...body,
+    status: 'PENDING' as const,
+  };
+  appointments.push(newAppointment);
+  return NextResponse.json({ appointment: newAppointment }, { status: 201 });
+}
+
+export async function PUT(request: NextRequest) {
+  // Update appointment status (for admin cancel)
+  const url = new URL(request.url);
+  const id = parseInt(url.pathname.split('/').pop() || '0');
+  const body = await request.json();
+
+  const appointment = appointments.find(a => a.id === id);
+  if (!appointment) {
+    return NextResponse.json({ error: 'Appointment not found' }, { status: 404 });
+  }
+
+  appointment.status = body.status;
+  return NextResponse.json({ appointment });
+}

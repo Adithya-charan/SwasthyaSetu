@@ -112,7 +112,7 @@ export default function PatientSymptomsPage() {
                             <TrendingUp className="w-5 h-5 text-green-500" /> Symptom Trends
                         </h3>
                         <div className="h-[280px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                 <LineChart data={symptoms} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                                     <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} dy={10} />

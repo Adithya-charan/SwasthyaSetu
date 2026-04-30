@@ -1,0 +1,80 @@
+{
+  "navbar": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "doctors": "Doctors",
+    "hospitals": "Hospitals",
+    "pharmacy": "Pharmacy",
+    "profile": "Profile",
+    "settings": "Settings",
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register"
+  },
+  "homepage": {
+    "quickAccess": "Quick Access Panel",
+    "healthCard": "View Health Card",
+    "bookAppointment": "Book Appointment",
+    "findHospital": "Find Hospital",
+    "emergency": "Emergency Help"
+  },
+  "doctors": {
+    "search": "Doctor Search",
+    "find": "Find Doctors",
+    "specialization": "Specialization",
+    "experience": "Experience",
+    "fee": "Consultation Fee",
+    "book": "Book Now",
+    "online": "Online Consultation"
+  },
+  "hospitals": {
+    "finder": "Hospital Finder",
+    "nearby": "Hospitals Near Me",
+    "map": "View on Map",
+    "speciality": "Main Speciality"
+  },
+  "appointment": {
+    "workflow": "Appointment Booking",
+    "step1": "Select Doctor",
+    "step2": "Select Slot",
+    "step3": "Confirm Booking",
+    "confirmed": "Booking Confirmed",
+    "date": "Date",
+    "time": "Time"
+  },
+  "healthCard": {
+    "dashboard": "Health Card Dashboard",
+    "identity": "Digital Identity",
+    "family": "Family Member Records",
+    "blood": "Blood Group",
+    "allergies": "Allergies",
+    "contact": "Emergency Contact"
+  },
+  "profile": {
+    "title": "Profile Page",
+    "edit": "Edit Profile",
+    "records": "Medical Records",
+    "history": "Health History"
+  },
+  "help": {
+    "faq": "Frequently Asked Questions",
+    "contact": "Contact Us",
+    "support": "Support Center"
+  },
+  "admin": {
+    "panel": "Admin Panel Interface",
+    "users": "User Management",
+    "appointments": "Total Appointments",
+    "revenue": "Revenue Report",
+    "controls": "System Controls"
+  },
+  "common": {
+    "search": "Search",
+    "name": "Name",
+    "age": "Age",
+    "phone": "Phone Number",
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "submit": "Submit"
+  }
+}

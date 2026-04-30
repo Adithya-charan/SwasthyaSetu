@@ -1,0 +1,80 @@
+{
+  "navbar": {
+    "home": "ਹੋਮ",
+    "dashboard": "ਡੈਸ਼ਬੋਰਡ",
+    "doctors": "ਡਾਕਟਰ",
+    "hospitals": "ਹਸਪਤਾਲ",
+    "pharmacy": "ਫਾਰਮੇਸੀ",
+    "profile": "ਪ੍ਰੋਫਾਈਲ",
+    "settings": "ਸੈਟਿੰਗਾਂ",
+    "login": "ਲੌਗਇਨ",
+    "logout": "ਲੌਗਆਉਟ",
+    "register": "ਰਜਿਸਟਰ"
+  },
+  "homepage": {
+    "quickAccess": "ਤੁਰੰਤ ਪਹੁੰਚ ਪੈਨਲ",
+    "healthCard": "ਹੈਲਥ ਕਾਰਡ ਦੇਖੋ",
+    "bookAppointment": "ਅਪੌਇੰਟਮੈਂਟ ਬੁੱਕ ਕਰੋ",
+    "findHospital": "ਹਸਪਤਾਲ ਲੱਭੋ",
+    "emergency": "ਐਮਰਜੈਂਸੀ ਮਦਦ"
+  },
+  "doctors": {
+    "search": "ਡਾਕਟਰ ਦੀ ਖੋਜ",
+    "find": "ਡਾਕਟਰ ਲੱਭੋ",
+    "specialization": "ਮੁਹਾਰਤ",
+    "experience": "ਤਜਰਬਾ",
+    "fee": "ਸਲਾਹ ਫੀਸ",
+    "book": "ਹੁਣੇ ਬੁੱਕ ਕਰੋ",
+    "online": "ਆਨਲਾਈਨ ਸਲਾਹ"
+  },
+  "hospitals": {
+    "finder": "ਹਸਪਤਾਲ ਲੱਭਣ ਵਾਲਾ",
+    "nearby": "ਮੇਰੇ ਨੇੜੇ ਹਸਪਤਾਲ",
+    "map": "ਨਕਸ਼ੇ 'ਤੇ ਦੇਖੋ",
+    "speciality": "ਮੁੱਖ ਵਿਸ਼ੇਸ਼ਤਾ"
+  },
+  "appointment": {
+    "workflow": "ਅਪੌਇੰਟਮੈਂਟ ਬੁਕਿੰਗ",
+    "step1": "ਡਾਕਟਰ ਚੁਣੋ",
+    "step2": "ਸਮਾਂ ਚੁਣੋ",
+    "step3": "ਬੁਕਿੰਗ ਦੀ ਪੁਸ਼ਟੀ ਕਰੋ",
+    "confirmed": "ਬੁਕਿੰਗ ਦੀ ਪੁਸ਼ਟੀ ਹੋ ਗਈ",
+    "date": "ਮਿਤੀ",
+    "time": "ਸਮਾਂ"
+  },
+  "healthCard": {
+    "dashboard": "ਹੈਲਥ ਕਾਰਡ ਡੈਸ਼ਬੋਰਡ",
+    "identity": "ਡਿਜੀਟਲ ਪਛਾਣ",
+    "family": "ਪਰਿਵਾਰਕ ਮੈਂਬਰਾਂ ਦੇ ਰਿਕਾਰਡ",
+    "blood": "ਬਲੱਡ ਗਰੁੱਪ",
+    "allergies": "ਐਲਰਜੀ",
+    "contact": "ਐਮਰਜੈਂਸੀ ਸੰਪਰਕ"
+  },
+  "profile": {
+    "title": "ਪ੍ਰੋਫਾਈਲ ਪੇਜ",
+    "edit": "ਪ੍ਰੋਫਾਈਲ ਸੋਧੋ",
+    "records": "ਮੈਡੀਕਲ ਰਿਕਾਰਡ",
+    "history": "ਸਿਹਤ ਇਤਿਹਾਸ"
+  },
+  "help": {
+    "faq": "ਅਕਸਰ ਪੁੱਛੇ ਜਾਂਦੇ ਸਵਾਲ",
+    "contact": "ਸਾਡੇ ਨਾਲ ਸੰਪਰਕ ਕਰੋ",
+    "support": "ਸਹਾਇਤਾ ਕੇਂਦਰ"
+  },
+  "admin": {
+    "panel": "ਐਡਮਿਨ ਪੈਨਲ",
+    "users": "ਯੂਜ਼ਰ ਪ੍ਰਬੰਧਨ",
+    "appointments": "ਕੁੱਲ ਅਪੌਇੰਟਮੈਂਟਾਂ",
+    "revenue": "ਆਮਦਨ ਰਿਪੋਰਟ",
+    "controls": "ਸਿਸਟਮ ਕੰਟਰੋਲ"
+  },
+  "common": {
+    "search": "ਖੋਜੋ",
+    "name": "ਨਾਮ",
+    "age": "ਉਮਰ",
+    "phone": "ਫੋਨ ਨੰਬਰ",
+    "save": "ਤਬਦੀਲੀਆਂ ਸੁਰੱਖਿਅਤ ਕਰੋ",
+    "cancel": "ਰੱਦ ਕਰੋ",
+    "submit": "ਜਮ੍ਹਾਂ ਕਰੋ"
+  }
+}

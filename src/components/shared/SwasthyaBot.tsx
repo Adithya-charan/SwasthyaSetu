@@ -69,8 +69,30 @@ export default function SwasthyaBot() {
         return text;
     };
 
+    const handleLocalCommands = (text: string): boolean => {
+        // Password input command for login page
+        if (pathname === '/login') {
+            const pwdMatch = text.toLowerCase().match(/my password is\s+(.+)/i) || 
+                             text.toLowerCase().match(/mera password\s+(.+)\s+hai/i); // Hindi support
+            
+            if (pwdMatch && pwdMatch[1]) {
+                const extractedPassword = pwdMatch[1].trim();
+                document.dispatchEvent(new CustomEvent('fill-password', { detail: extractedPassword }));
+                
+                const sysMsg = { id: Date.now().toString(), role: 'assistant', content: 'I have filled in your password securely.' };
+                setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', content: 'My password is ●●●●●●' }, sysMsg]);
+                setInput('');
+                return true; // Command handled locally
+            }
+        }
+        return false;
+    };
+
     const sendMessage = async (content: string) => {
         if (!content.trim()) return;
+        
+        // Check for local commands first (like voice password)
+        if (handleLocalCommands(content)) return;
         
         const lang = detectLanguage(content);
         if (lang !== detectedLang) setDetectedLang(lang);
@@ -167,9 +189,9 @@ export default function SwasthyaBot() {
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.96, y: 30, filter: 'blur(15px)' }}
-                        animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
-                        exit={{ opacity: 0, scale: 0.96, y: 30, filter: 'blur(15px)' }}
+                        initial={{ opacity: 0, scale: 0.96, y: 30 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.96, y: 30 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                         className="bg-white/95 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] border border-slate-200/50 w-[400px] h-[680px] mb-6 flex flex-col overflow-hidden pointer-events-auto relative ring-1 ring-black/5"
                     >

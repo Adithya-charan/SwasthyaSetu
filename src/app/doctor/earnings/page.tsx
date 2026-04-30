@@ -74,7 +74,7 @@ export default function DoctorEarningsPage() {
                     <TrendingUp className="w-5 h-5 text-primary-500" /> Revenue Timeline
                 </h3>
                 <div className="h-[300px] w-full mt-4">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                         <BarChart data={earningsData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                             <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 13, fontWeight: 500}} dy={15} />

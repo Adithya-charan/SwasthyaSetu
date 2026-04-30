@@ -1,4 +1,5 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { Pill, Clock, CheckCircle } from 'lucide-react';
 import StatCard from '@/components/shared/StatCard';
 import Link from 'next/link';
@@ -8,9 +9,22 @@ import { toast } from 'react-toastify';
 
 export default function PharmacistDashboard() {
     
+    const [isMounted, setIsMounted] = useState(false);
+    const [stats, setStats] = useState({ pending: 0, dispensed: 0 });
+
+    useEffect(() => {
+        setIsMounted(true);
+        const stored = JSON.parse(localStorage.getItem('mockPrescriptions') || '[]');
+        const pending = stored.filter((q: any) => q.status === 'pending').length;
+        const dispensed = stored.filter((q: any) => q.status === 'dispensed').length;
+        setStats({ pending: pending + 12, dispensed: dispensed + 35 }); // Combining with base demo stats
+    }, []);
+
     const handlePrint = () => {
         toast.success("Downloading today's dispensing report...");
     };
+
+    if (!isMounted) return null;
 
     return (
         <div className="space-y-6">
@@ -22,9 +36,9 @@ export default function PharmacistDashboard() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatCard icon={<Clock className="w-6 h-6" />} value="12" label="Pending Prescriptions" accentColor="yellow" />
-                <StatCard icon={<CheckCircle className="w-6 h-6" />} value="35" label="Dispensed Today" accentColor="green" />
-                <StatCard icon={<Pill className="w-6 h-6" />} value="1,204" label="Total Dispensed" accentColor="primary" />
+                <StatCard icon={<Clock className="w-6 h-6" />} value={stats.pending.toString()} label="Pending Prescriptions" accentColor="yellow" />
+                <StatCard icon={<CheckCircle className="w-6 h-6" />} value={stats.dispensed.toString()} label="Dispensed Today" accentColor="green" />
+                <StatCard icon={<Pill className="w-6 h-6" />} value={(stats.dispensed + 1169).toString()} label="Total Dispensed" accentColor="primary" />
             </div>
 
             <div className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-4">

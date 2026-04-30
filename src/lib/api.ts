@@ -4,20 +4,14 @@
  */
 
 const getApiBaseUrl = () => {
-    if (typeof window === 'undefined') return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-    
-    const isVercel = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('swasthyasetu');
-    
+    // 1. Check for explicit environment variable (build-time or server-side)
     if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+
+    // 2. Server-side rendering fallback
+    if (typeof window === 'undefined') return 'http://localhost:8080';
     
-    // Fallback logic
-    if (isVercel) {
-        // Assume backend is on the same host or has a specific convention
-        // For now, return the current origin as a guess (Next.js rewrites or same-domain backend)
-        return window.location.origin;
-    }
-    
-    return `${window.location.protocol}//${window.location.hostname}:8080`;
+    // 3. Use relative paths for both Local and Vercel to leverage next.config.js rewrites
+    return ''; 
 };
 
 export const API_BASE_URL = getApiBaseUrl();
@@ -42,7 +36,9 @@ export const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `API Error: ${response.status}`);
+        const error = new Error(errorData.message || `API Error: ${response.status}`);
+        (error as any).data = errorData.data; // Attach the data (validation errors)
+        throw error;
     }
 
     return response.json();

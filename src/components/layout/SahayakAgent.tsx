@@ -50,7 +50,7 @@ const AgentInternal = ({
             console.log("Enabling mic for Sahayak...");
             localParticipant.setMicrophoneEnabled(true).then(() => {
                 console.log("Mic enabled for Sahayak");
-            }).catch(err => {
+            }).catch((err: any) => {
                 console.error("Failed to enable mic:", err);
             });
         }

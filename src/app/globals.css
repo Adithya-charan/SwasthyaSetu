@@ -35,3 +35,55 @@ body {
         transform: translateY(0);
     }
 }
+
+/* Accessibility Mode Overrides */
+.accessibility-mode {
+    font-size: 1.25rem; /* Increase base font size */
+}
+
+.accessibility-mode h1 { font-size: 3rem; }
+.accessibility-mode h2 { font-size: 2.5rem; }
+.accessibility-mode h3 { font-size: 2rem; }
+.accessibility-mode p { font-size: 1.5rem; }
+
+.accessibility-mode .btn-large {
+    padding: 1.5rem 2.5rem;
+    font-size: 1.75rem;
+    font-weight: bold;
+    border-radius: 1rem;
+}
+
+.accessibility-mode .card-simple {
+    padding: 2rem;
+    background: #ffffff;
+    border: 3px solid #0056D2;
+    border-radius: 1.5rem;
+}
+
+.accessibility-mode .high-contrast {
+    background: #000000 !important;
+    color: #FFFF00 !important;
+}
+
+/* Tooltip for medical term helper */
+.medical-term {
+    text-decoration: underline dotted;
+    cursor: help;
+    position: relative;
+}
+
+.medical-term:hover::after {
+    content: attr(data-explanation);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 1rem;
+    background: #333;
+    color: #fff;
+    border-radius: 0.5rem;
+    width: 250px;
+    font-size: 1rem;
+    z-index: 50;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}

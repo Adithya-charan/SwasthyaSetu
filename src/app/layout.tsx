@@ -5,6 +5,8 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import SwasthyaBot from '@/components/shared/SwasthyaBot';
+import { AccessibilityProvider } from '@/context/AccessibilityContext';
+import { LanguageProvider } from '@/context/LanguageContext';
 
 const manrope = Manrope({ subsets: ['latin'] })
 
@@ -19,13 +21,17 @@ export default function RootLayout({
     children: React.ReactNode
 }) {
     return (
-        <html lang="en">
-            <body className={manrope.className}>
-                <AuthProvider>
-                    {children}
-                    <SwasthyaBot />
-                    <ToastContainer position="top-right" autoClose={3000} />
-                </AuthProvider>
+        <html lang="en" suppressHydrationWarning>
+            <body className={manrope.className} suppressHydrationWarning>
+                <LanguageProvider>
+                    <AuthProvider>
+                        <AccessibilityProvider>
+                            {children}
+                            <SwasthyaBot />
+                            <ToastContainer position="top-right" autoClose={3000} />
+                        </AccessibilityProvider>
+                    </AuthProvider>
+                </LanguageProvider>
             </body>
         </html>
     )

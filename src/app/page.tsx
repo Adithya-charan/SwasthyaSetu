@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Video, FileText, Activity, ShieldCheck, Clock, CheckCircle } from 'lucide-react'
+import { ArrowRight, Video, FileText, Activity, ShieldCheck, Clock, CheckCircle, User } from 'lucide-react'
 
 export default function Home() {
     return (
@@ -21,6 +21,7 @@ export default function Home() {
                     </div>
 
                     <div className="flex items-center gap-4">
+                        <div id="google_translate_element" className="hidden sm:block"></div>
                         <Link href="/login" className="text-slate-900 font-medium hover:text-primary-600 px-4 py-2">
                             Login
                         </Link>
@@ -54,19 +55,19 @@ export default function Home() {
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                                <Link href="/signup?role=patient" className="bg-primary-500 hover:bg-primary-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-xl shadow-primary-500/20 text-center">
+                                <Link href="/signup?role=patient" className="bg-primary-500 hover:bg-primary-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-xl shadow-primary-500/20 text-center flex-1">
                                     Book Appointment
                                 </Link>
                                 <Link href="#demo" className="bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 px-8 py-4 rounded-xl font-semibold text-lg transition-all text-center flex items-center justify-center gap-2">
-                                    <Video className="w-5 h-5 text-slate-400" /> Watch Demo
+                                    <Video className="w-5 h-5 text-slate-400" /> Demo
                                 </Link>
                             </div>
 
                             <div className="flex items-center gap-6 pt-8 border-t border-slate-100">
                                 <div className="flex -space-x-4">
                                     {[1, 2, 3, 4].map((i) => (
-                                        <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center overflow-hidden">
-                                            <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="User" />
+                                        <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center overflow-hidden text-slate-400">
+                                            <User className="w-5 h-5" />
                                         </div>
                                     ))}
                                 </div>
@@ -108,11 +109,14 @@ export default function Home() {
                                     </div>
                                 </div>
 
-                                <img
-                                    src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=2864&auto=format&fit=crop"
-                                    alt="Doctor"
-                                    className="rounded-2xl w-full object-cover h-[500px]"
-                                />
+                                <div className="rounded-2xl w-full bg-slate-50 h-[500px] flex items-center justify-center overflow-hidden relative group">
+                                    <img 
+                                        src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=2070" 
+                                        alt="Doctor using digital healthcare platform" 
+                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-primary-900/20 to-transparent"></div>
+                                </div>
 
                                 <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur p-4 rounded-xl border border-white/50 shadow-lg">
                                     <div className="flex justify-between items-center">
@@ -165,6 +169,36 @@ export default function Home() {
                                 <p className="text-slate-500 leading-relaxed">{service.desc}</p>
                             </div>
                         ))}
+                    </div>
+                </div>
+            </section>
+            
+            {/* Demo Section */}
+            <section className="py-20 bg-white" id="demo">
+                <div className="container mx-auto px-4">
+                    <div className="max-w-5xl mx-auto">
+                        <div className="text-center mb-12">
+                            <h2 className="text-3xl font-bold text-slate-900 mb-4">Experience SwasthyaSetu in Action</h2>
+                            <p className="text-slate-600">See how easy it is to connect with a specialist and manage your health.</p>
+                        </div>
+                        <div className="aspect-video rounded-[2.5rem] bg-slate-900 overflow-hidden shadow-2xl relative group">
+                            <video 
+                                className="w-full h-full object-cover opacity-80" 
+                                autoPlay 
+                                loop 
+                                muted 
+                                playsInline
+                                poster="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=2070"
+                            >
+                                <source src="https://assets.mixkit.co/videos/preview/mixkit-doctor-checking-the-pulse-of-a-patient-41221-large.mp4" type="video/mp4" />
+                                Your browser does not support the video tag.
+                            </video>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-20 h-20 bg-primary-500/90 backdrop-blur-sm rounded-full flex items-center justify-center text-white shadow-xl shadow-primary-500/50 cursor-pointer hover:scale-110 transition-transform group-hover:bg-primary-500">
+                                    <Video className="w-10 h-10" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
