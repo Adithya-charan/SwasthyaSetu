@@ -1,6 +1,5 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/SwasthyaSetu-स्वास्थ्य_सेतु-2563EB?style=for-the-badge&logoColor=white" alt="SwasthyaSetu" />
 
 # 🏥 SwasthyaSetu — स्वास्थ्य सेतु
 
