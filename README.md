@@ -17,13 +17,6 @@ A modern, **multilingual telemedicine platform** connecting patients and doctors
 [![MySQL](https://img.shields.io/badge/MySQL_8-4479A1?style=flat-square&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![LiveKit](https://img.shields.io/badge/LiveKit-FF4F00?style=flat-square&logo=livekit&logoColor=white)](https://livekit.io/)
-
-<br/>
-
-[📋 Features](#-features) · [🏗 Architecture](#-architecture) · [🚀 Quick Start](#-quick-start) · [📡 API Reference](#-api-reference) · [⚠️ Known Issues](#️-known-issues--fixes)
-
-</div>
-
 ---
 
 ## 📌 Problem Statement
