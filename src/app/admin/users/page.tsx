@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Search, Activity } from 'lucide-react';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { toast } from 'react-toastify';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 
 export default function AdminUsersPage() {
     const [users, setUsers] = useState<any[]>([]);
@@ -19,7 +19,7 @@ export default function AdminUsersPage() {
         setIsLoading(true);
         try {
             const roleParam = filter === 'All' ? '' : `&role=${filter.toUpperCase().replace(/S$/, '')}`;
-            const data = await fetchApi(`/api/admin/users?page=0&size=100${roleParam}`);
+            const data = await authFetch(`/api/admin/users?page=0&size=100${roleParam}`);
             if (data.success) {
                 setUsers(data.data.content);
             }
@@ -34,7 +34,7 @@ export default function AdminUsersPage() {
     const handleToggleStatus = async (id: string, currentStatus: string) => {
         try {
             const newStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-            const data = await fetchApi(`/api/admin/users/${id}/status?status=${newStatus}`, {
+            const data = await authFetch(`/api/admin/users/${id}/status?status=${newStatus}`, {
                 method: 'PUT'
             });
             if (data.success) {

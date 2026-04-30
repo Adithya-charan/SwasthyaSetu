@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Star, User, Calendar, Clock, UserCheck, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 
 export default function DoctorsPage() {
     const [filter, setFilter] = useState('');
@@ -15,7 +15,7 @@ export default function DoctorsPage() {
         const loadDoctors = async () => {
             try {
                 // Fetch approved doctors from the backend
-                const data = await fetchApi('/api/doctors');
+                const data = await authFetch('/api/doctors');
                 setDoctors(data.data.content || []);
             } catch (error) {
                 console.error("Failed to load doctors", error);

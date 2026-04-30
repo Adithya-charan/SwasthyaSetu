@@ -4,7 +4,7 @@ import { Calendar, Pill, ActivitySquare, ArrowRight, Video, Clock, Loader2 } fro
 import Link from 'next/link';
 import StatCard from '@/components/shared/StatCard';
 import AppointmentCard from '@/components/shared/AppointmentCard';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 import { useLanguage } from '@/context/LanguageContext';
 
 import { useAuth } from '@/context/AuthContext';
@@ -20,7 +20,7 @@ export default function PatientDashboard() {
             setIsLoading(true);
             try {
                 // Try real API first
-                const data = await fetchApi('/api/appointments/my');
+                const data = await authFetch('/api/appointments/my');
                 if (data.data.content && data.data.content.length > 0) {
                     setAppointments(data.data.content);
                 } else {

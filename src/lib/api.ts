@@ -16,8 +16,8 @@ const getApiBaseUrl = () => {
 
 export const API_BASE_URL = getApiBaseUrl();
 
-export const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+export const authFetch = async (endpoint: string, options: RequestInit = {}) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
     
     const headers = {
         'Content-Type': 'application/json',
@@ -37,9 +37,12 @@ export const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const error = new Error(errorData.message || `API Error: ${response.status}`);
-        (error as any).data = errorData.data; // Attach the data (validation errors)
+        (error as any).data = errorData.data;
         throw error;
     }
 
     return response.json();
 };
+
+// Maintain fetchApi as an alias for backward compatibility during transition
+export const fetchApi = authFetch;

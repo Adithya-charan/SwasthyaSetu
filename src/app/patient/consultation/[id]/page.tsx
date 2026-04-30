@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { PhoneOff, MessageSquare, FileText, ClipboardList, ShieldCheck, Download, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import VideoConsult from '@/components/consultation/VideoConsult';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 
 export default function PatientConsultationPage({ params }: { params: { id: string } }) {
     const router = useRouter();
@@ -22,12 +22,12 @@ export default function PatientConsultationPage({ params }: { params: { id: stri
         const loadConsultation = async () => {
             try {
                 // Fetch appointment to get doctor info
-                const apptResponse = await fetchApi(`/api/appointments/${params.id}`);
+                const apptResponse = await authFetch(`/api/appointments/${params.id}`);
                 const appt = apptResponse.data;
                 setDoctorData({ name: appt.doctorName || "Dr. Sharma (Specialist)" });
 
                 // Fetch real video room name
-                const roomResponse = await fetchApi(`/api/appointments/${params.id}/video-room`);
+                const roomResponse = await authFetch(`/api/appointments/${params.id}/video-room`);
                 setRoomName(roomResponse.data.video_room_name);
             } catch (error) {
                 console.warn("Failed to load patient consultation, using Demo Room:", error);

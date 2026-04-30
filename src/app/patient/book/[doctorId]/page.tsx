@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Calendar, Clock, User, ChevronLeft, CheckCircle, ShieldCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'react-toastify';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 
 export default function BookAppointmentPage({ params }: { params: { doctorId: string } }) {
     const router = useRouter();
@@ -20,7 +20,7 @@ export default function BookAppointmentPage({ params }: { params: { doctorId: st
         const loadDoctor = async () => {
             try {
                 // Fetch the real doctor profile from the backend
-                const data = await fetchApi(`/api/doctors/${params.doctorId}`);
+                const data = await authFetch(`/api/doctors/${params.doctorId}`);
                 setDoctor(data.data);
             } catch (error) {
                 console.error("Failed to load doctor profile", error);
@@ -49,7 +49,7 @@ export default function BookAppointmentPage({ params }: { params: { doctorId: st
                 reason: reason
             };
             
-            await fetchApi('/api/appointments', {
+            await authFetch('/api/appointments', {
                 method: 'POST',
                 body: JSON.stringify(payload)
             });

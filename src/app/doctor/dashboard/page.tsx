@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Calendar, Users, Pill, Activity, UserPlus, Loader2 } from 'lucide-react';
 import StatCard from '@/components/shared/StatCard';
 import AppointmentCard from '@/components/shared/AppointmentCard';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 import Link from 'next/link';
 
 import { useAuth } from '@/context/AuthContext';
@@ -17,7 +17,7 @@ export default function DoctorDashboard() {
         const loadDashboard = async () => {
             try {
                 // Fetch appointments for the logged in doctor
-                const data = await fetchApi('/api/appointments/my');
+                const data = await authFetch('/api/appointments/my');
                 setAppointments(data.data.content || []);
             } catch (error) {
                 console.warn("DASHBOARD: Failed to fetch live data, using Demo Data", error);

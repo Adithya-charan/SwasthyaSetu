@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { Pill, User, Search, AlertTriangle, Plus } from 'lucide-react';
@@ -49,7 +49,7 @@ export default function DoctorPrescriptions() {
 
         setIsSubmitting(true);
         try {
-            await fetchApi('/api/prescriptions', {
+            await authFetch('/api/prescriptions', {
                 method: 'POST',
                 body: JSON.stringify({
                     patientId,

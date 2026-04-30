@@ -1,14 +1,14 @@
 'use client';
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 
 interface User {
     id: string;
     name: string;
     email: string;
     role: 'patient' | 'doctor' | 'pharmacist' | 'admin';
-    token: string;
+    accessToken: string;
     image?: string;
     accountStatus: 'PENDING' | 'ACTIVE' | 'SUSPENDED';
 }
@@ -41,10 +41,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (email: string, password: string, role: string, otp?: string) => {
         setIsLoading(true);
+        // Force logout/clear before new login
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
         try {
             console.log(`LOGIN: Requesting session for ${email} as ${role}`);
             
-            const apiData = await fetchApi('/api/auth/login', {
+            const apiData = await authFetch('/api/auth/login', {
                 method: 'POST',
                 body: JSON.stringify({ email, password, role, otp }),
             });
@@ -53,19 +56,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 throw new Error(apiData.message || 'Authentication failed');
             }
 
-            const { accessToken, userId, fullName, accountStatus } = apiData.data;
+            // Extract token from either apiData.data or apiData.data.data as per varying backend responses
+            const tokenData = apiData.data?.data || apiData.data;
+            const { accessToken, userId, fullName, accountStatus } = tokenData;
 
             const userData: User = {
                 id: userId,
                 name: fullName || email.split('@')[0],
                 email: email, 
                 role: role as any,
-                token: accessToken,
+                accessToken: accessToken,
                 accountStatus: accountStatus || 'ACTIVE'
             };
             
             localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('token', accessToken);
+            localStorage.setItem('accessToken', accessToken);
             setUser(userData);
             return userData;
 
@@ -87,12 +92,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 name: demoName,
                 email: email,
                 role: role as any,
-                token: 'demo-token',
+                accessToken: 'demo-token',
                 accountStatus: 'ACTIVE'
             };
             
             localStorage.setItem('user', JSON.stringify(demoUser));
-            localStorage.setItem('token', 'demo-token');
+            localStorage.setItem('accessToken', 'demo-token');
             setUser(demoUser);
             return demoUser;
         } finally {
@@ -101,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const logout = () => {
-        localStorage.removeItem('token');
+        localStorage.removeItem('accessToken');
         localStorage.removeItem('user');
         setUser(null);
         router.push('/login');

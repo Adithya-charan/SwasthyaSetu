@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/context/AuthContext';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 import { Loader2, UserCheck, Camera, User } from 'lucide-react';
 
 export default function DoctorProfilePage() {
@@ -15,7 +15,7 @@ export default function DoctorProfilePage() {
         const loadProfile = async () => {
             try {
                 // Fetch the full doctor profile from the backend
-                const data = await fetchApi(`/api/doctors/${user?.id}`);
+                const data = await authFetch(`/api/doctors/${user?.id}`);
                 setProfile(data.data);
             } catch (error) {
                 console.error("Failed to load doctor profile", error);
@@ -31,7 +31,7 @@ export default function DoctorProfilePage() {
         setIsSaving(true);
         try {
             // For now, simulating a save. You can implement PUT /api/doctors/me later.
-            await new Promise(r => setTimeout(r, 1000));
+            await authFetch(`/api/doctors/${user?.id}`, { method: 'PUT', body: JSON.stringify({}) });
             toast.success("Profile updated successfully");
         } catch (error) {
             toast.error("Failed to update profile");

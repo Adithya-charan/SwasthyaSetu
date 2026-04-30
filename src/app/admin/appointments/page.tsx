@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import StatusBadge from '@/components/shared/StatusBadge';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 
 export default function AdminAppointmentsPage() {
     const [apps, setApps] = useState<any[]>([]);
@@ -10,7 +10,7 @@ export default function AdminAppointmentsPage() {
     useEffect(() => {
         const fetchAppointments = async () => {
             try {
-                const data = await fetchApi('/api/appointments');
+                const data = await authFetch('/api/appointments');
                 setApps(data.appointments);
             } catch (error) {
                 console.error('Failed to fetch appointments:', error);
@@ -24,7 +24,7 @@ export default function AdminAppointmentsPage() {
 
     const handleCancel = async (id: number) => {
         try {
-            await fetchApi(`/api/appointments/${id}`, {
+            await authFetch(`/api/appointments/${id}`, {
                 method: 'PUT',
                 body: JSON.stringify({ status: 'CANCELLED' }),
             });

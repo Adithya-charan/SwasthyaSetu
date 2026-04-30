@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { Activity, Lock, Mail, User, Phone, Stethoscope, MapPin, CheckCircle, Calendar, Droplet, Globe, Hash, UploadCloud, FileText } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { languageNames, Language } from '@/data/translations';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 
 type Role = 'patient' | 'doctor' | 'pharmacist';
 
@@ -81,7 +81,7 @@ export default function SignupPage() {
             };
             
             // For now, let's assume the backend register endpoint takes these or we'll update it.
-            await fetchApi('/api/auth/register', {
+            await authFetch('/api/auth/register', {
                 method: 'POST',
                 body: JSON.stringify(body)
             });

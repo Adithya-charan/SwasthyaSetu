@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Trash2, Plus, Save, PhoneOff, ClipboardList, MessageSquare, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import VideoConsult from '@/components/consultation/VideoConsult';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 
 export default function DoctorConsultationPage({ params }: { params: { id: string } }) {
     const router = useRouter();
@@ -29,7 +29,7 @@ export default function DoctorConsultationPage({ params }: { params: { id: strin
         const loadConsultationData = async () => {
             try {
                 // 1. Fetch Appointment to get patient name
-                const apptResponse = await fetchApi(`/api/appointments/${params.id}`);
+                const apptResponse = await authFetch(`/api/appointments/${params.id}`);
                 const appt = apptResponse.data;
                 setPatientData({ 
                     name: appt.patientName || `Patient #${appt.patientId.substring(0, 8)}`, 
@@ -37,7 +37,7 @@ export default function DoctorConsultationPage({ params }: { params: { id: strin
                 });
 
                 // 2. Fetch/Create Video Room Name from backend
-                const roomResponse = await fetchApi(`/api/appointments/${params.id}/video-room`);
+                const roomResponse = await authFetch(`/api/appointments/${params.id}/video-room`);
                 setRoomName(roomResponse.data.video_room_name);
             } catch (error) {
                 console.warn("Failed to load consultation data, using Demo Room", error);
@@ -77,12 +77,12 @@ export default function DoctorConsultationPage({ params }: { params: { id: strin
                 language: 'English'
             };
 
-            await fetchApi(`/api/consultations/${params.id}/summary`, {
+            await authFetch(`/api/consultations/${params.id}/summary`, {
                 method: 'POST',
                 body: JSON.stringify(payload)
             });
 
-            await fetchApi(`/api/appointments/${params.id}/complete`, { method: 'PUT' });
+            await authFetch(`/api/appointments/${params.id}/complete`, { method: 'PUT' });
 
             toast.success('Consultation Finalized & Summary Saved!');
             router.push('/doctor/dashboard');

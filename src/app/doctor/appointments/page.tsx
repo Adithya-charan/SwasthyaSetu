@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import AppointmentCard from '@/components/shared/AppointmentCard';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 import { Loader2, Calendar } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -13,7 +13,7 @@ export default function DoctorAppointments() {
         setIsLoading(true);
         try {
             // Fetch appointments for the logged-in doctor
-            const data = await fetchApi('/api/appointments/my');
+            const data = await authFetch('/api/appointments/my');
             setApps(data.data.content || []);
         } catch (error) {
             console.error("Failed to load doctor appointments", error);
@@ -29,7 +29,7 @@ export default function DoctorAppointments() {
 
     const handleConfirm = async (id: string) => {
         try {
-            await fetchApi(`/api/appointments/${id}/confirm`, { method: 'PUT' });
+            await authFetch(`/api/appointments/${id}/confirm`, { method: 'PUT' });
             toast.success("Appointment confirmed");
             loadAppointments();
         } catch (error) {
@@ -41,7 +41,7 @@ export default function DoctorAppointments() {
         const reason = prompt("Enter reason for cancellation:");
         if (!reason) return;
         try {
-            await fetchApi(`/api/appointments/${id}/cancel?reason=${encodeURIComponent(reason)}`, { method: 'PUT' });
+            await authFetch(`/api/appointments/${id}/cancel?reason=${encodeURIComponent(reason)}`, { method: 'PUT' });
             toast.success("Appointment cancelled");
             loadAppointments();
         } catch (error) {

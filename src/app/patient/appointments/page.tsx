@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
 import AppointmentCard from '@/components/shared/AppointmentCard';
 
@@ -12,7 +12,7 @@ export default function AppointmentsPage() {
     useEffect(() => {
         const loadAppointments = async () => {
             try {
-                const data = await fetchApi('/api/appointments/my');
+                const data = await authFetch('/api/appointments/my');
                 setAppointments(data.data.content || []);
             } catch (error) {
                 console.error("Failed to load appointments", error);

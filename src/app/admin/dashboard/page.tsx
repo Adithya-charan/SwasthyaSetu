@@ -5,7 +5,7 @@ import StatCard from '@/components/shared/StatCard';
 import { Users, UserCheck, Calendar, Pill, Activity, CheckCircle, XCircle, Eye, Download, Trash2, FileText } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, CartesianGrid } from 'recharts';
 import { useLanguage } from '@/context/LanguageContext';
-import { fetchApi } from '@/lib/api';
+import { authFetch } from '@/lib/api';
 
 export default function AdminDashboard() {
     const { t } = useLanguage();
@@ -28,7 +28,7 @@ export default function AdminDashboard() {
 
     const loadUsers = async () => {
         try {
-            const data = await fetchApi(`/api/admin/users?role=${pendingTab}&status=${statusTab}&page=0&size=10`);
+            const data = await authFetch(`/api/admin/users?role=${pendingTab}&status=${statusTab}&page=0&size=10`);
             if (data.success) {
                 setUsers(data.data.content);
                 if (statusTab === 'PENDING') {
@@ -47,11 +47,11 @@ export default function AdminDashboard() {
             else if (action === 'reject' || action === 'suspend') status = 'SUSPENDED';
 
             if (pendingTab === 'DOCTOR' && (action === 'approve' || action === 'reject')) {
-                await fetchApi(`/api/admin/doctors/${id}/verify?status=${status}`, {
+                await authFetch(`/api/admin/doctors/${id}/verify?status=${status}`, {
                     method: 'PUT'
                 });
             } else {
-                await fetchApi(`/api/admin/users/${id}/status?status=${status === 'VERIFIED' ? 'ACTIVE' : status}`, {
+                await authFetch(`/api/admin/users/${id}/status?status=${status === 'VERIFIED' ? 'ACTIVE' : status}`, {
                     method: 'PUT'
                 });
             }
